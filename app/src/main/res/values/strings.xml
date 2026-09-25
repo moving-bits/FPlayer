@@ -1,69 +1,69 @@
 <resources>
-    <string name="app_name">FPlayer</string>
+    <string name="app_name" translatable="false">FPlayer</string>
 
-    <string name="action_order_sequential">Reihenfolge: wie eingelesen</string>
-    <string name="action_order_shuffle">Reihenfolge: zufällig</string>
-    <string name="action_add_folder">Verzeichnis hinzufügen</string>
-    <string name="action_repeat_off">Wiederholen: aus</string>
-    <string name="action_repeat_on">Wiederholen: ein</string>
+    <string name="action_order_sequential">Order: sequential</string>
+    <string name="action_order_shuffle">Order: shuffle</string>
+    <string name="action_add_folder">Add folder</string>
+    <string name="action_repeat_off">Repeat: off</string>
+    <string name="action_repeat_on">Repeat: on</string>
 
-    <string name="button_previous">Vorheriger Titel</string>
-    <string name="button_rewind">10 Sekunden zurück</string>
-    <string name="button_play">Wiedergabe</string>
+    <string name="button_previous">Previous title</string>
+    <string name="button_rewind">10 seconds back</string>
+    <string name="button_play">Play</string>
     <string name="button_pause">Pause</string>
-    <string name="button_forward">10 Sekunden weiter</string>
-    <string name="button_next">Nächster Titel</string>
+    <string name="button_forward">10 seconds forward</string>
+    <string name="button_next">Next title</string>
 
-    <string name="expand">Aufklappen</string>
-    <string name="collapse">Zuklappen</string>
-    <string name="select">Auswählen</string>
-    <string name="deselect">Abwählen</string>
-    <string name="cover">Coverbild</string>
-    <string name="position">Abspielposition</string>
-    <string name="remove_folder">Verzeichnis entfernen</string>
+    <string name="expand">Expand</string>
+    <string name="collapse">Collapse</string>
+    <string name="select">Select</string>
+    <string name="deselect">Deselect</string>
+    <string name="cover">Cover</string>
+    <string name="position">Position</string>
+    <string name="remove_folder">Remove folder</string>
 
-    <string name="empty_hint">Noch kein Verzeichnis konfiguriert.\nTippe oben auf das Ordnersymbol, um ein Verzeichnis hinzuzufügen.</string>
+    <string name="empty_hint">No folder configured yet. Tap on folder symbol to add a folder.</string>
 
-    <string name="info_files">Dateien: %d</string>
-    <string name="info_total_duration">Gesamtspieldauer: %s</string>
-    <string name="info_duration_pending">Gesamtspieldauer: wird ermittelt …</string>
-    <string name="info_metadata_pending">Metadaten werden gelesen …</string>
-    <string name="info_title">Titel: %s</string>
-    <string name="info_artist">Interpret: %s</string>
+    <string name="info_files">Files: %d</string>
+    <string name="info_total_duration">Total: %s</string>
+    <string name="info_duration_pending">Calculation total duration…</string>
+    <string name="info_metadata_pending">Collecting meta data…</string>
+    <string name="info_title">Title: %s</string>
+    <string name="info_artist">Artist: %s</string>
     <string name="info_album">Album: %s</string>
-    <string name="info_duration">Länge: %s</string>
-    <string name="info_unknown">–</string>
+    <string name="info_duration">Duration: %s</string>
+    <string name="info_unknown" translatable="false">–</string>
 
-    <string name="remove_folder_title">Verzeichnis entfernen?</string>
-    <string name="remove_folder_message">„%s“ wird aus der Liste entfernt und die Zugriffsberechtigung freigegeben. Die Dateien selbst bleiben erhalten.</string>
-    <string name="remove">Entfernen</string>
-    <string name="cancel">Abbrechen</string>
+    <string name="remove_folder_title">Remove folder?</string>
+    <string name="remove_folder_message">„%s“ will be removed from list and access grants returned. No files will be removed.</string>
+    <string name="remove">Remove</string>
+    <string name="cancel">Cancel</string>
 
-    <string name="folder_already_added">Dieses Verzeichnis ist bereits vorhanden.</string>
-    <string name="folder_permission_failed">Zugriff auf das Verzeichnis konnte nicht dauerhaft gespeichert werden.</string>
-    <string name="nothing_selected">Keine Titel ausgewählt.</string>
+    <string name="folder_already_added">Folder already added.</string>
+    <string name="folder_permission_failed">Folder permission failed.</string>
+    <string name="nothing_selected">Nothing selected.</string>
 
-    <string name="about">Über FPlayer</string>
+    <string name="about">About FPlayer</string>
     <string name="about_info">A free folder audio player</string>
-    <string name="about_copyright_single">© %1$d moving-bits.net</string>
-    <string name="about_copyright_range">© %1$d-%2$d moving-bits.net</string>
+    <string name="about_copyright_single" translatable="false">© %1$d moving-bits.net</string>
+    <string name="about_copyright_range" translatable="false">© %1$d-%2$d moving-bits.net</string>
     <string name="about_version">Version %s</string>
 
-    <string name="profile_button">Profil: %s</string>
-    <string name="profiles_title">Profile</string>
-    <string name="profile_new">Neu</string>
+    <string name="profile_button">Profile: %s</string>
+    <string name="profiles_title">Profiles</string>
+    <string name="profile_new">New</string>
     <string name="ok">OK</string>
-    <string name="profile_new_title">Neues Profil</string>
-    <string name="profile_edit_title">Profil bearbeiten</string>
+    <string name="profile_new_title">New profile</string>
+    <string name="profile_edit_title">Edit profile</string>
     <string name="profile_name">Name</string>
-    <string name="profile_color">Farbe</string>
-    <string name="profile_color_item">Farbe %d</string>
-    <string name="profile_name_pattern">Profil %d</string>
-    <string name="profile_name_empty">Bitte einen Namen eingeben.</string>
-    <string name="profile_name_taken">Dieser Name ist bereits vergeben.</string>
-    <string name="profile_edit">Profil bearbeiten</string>
-    <string name="profile_delete">Profil löschen</string>
-    <string name="profile_delete_title">Profil löschen?</string>
-    <string name="profile_delete_message">Das Profil „%s“ wird mit allen Einstellungen gelöscht.</string>
-    <string name="delete">Löschen</string>
+    <string name="profile_color">Color</string>
+    <string name="profile_color_item">Color %d</string>
+    <string name="profile_name_pattern">Profile %d</string>
+    <string name="profile_name_empty">Please enter a name.</string>
+    <string name="profile_name_taken">This name is already in use.</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_delete">Delete profile</string>
+    <string name="profile_delete_title">Delete profile?</string>
+    <string name="profile_delete_message">Profile „%s“ and all its settings will be deleted.</string>
+    <string name="delete">Delete</string>
 </resources>
