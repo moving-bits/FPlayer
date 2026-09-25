@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-FPlayer: Android audio player (Java, XML layouts, Material 3) that browses music **by directory** instead of artist/album. All file access goes through the Storage Access Framework (SAF). minSdk 26, targetSdk/compileSdk 36. UI strings (`strings.xml`) are German; code comments, log messages and build descriptions are US English.
+FPlayer: Android audio player (Java, XML layouts, Material 3) that browses music **by directory** instead of artist/album. All file access goes through the Storage Access Framework (SAF). minSdk 26, targetSdk/compileSdk 36. UI strings are English in `values/strings.xml` with German translations in `values-de/strings.xml` (keep both in sync); code comments, log messages and build descriptions are US English.
 
 ## Build
 
@@ -38,6 +38,7 @@ Package `net.movingbits.fplayer`, single activity + Media3 session service:
 - **`PlaybackService`** (`MediaSessionService`) – ExoPlayer wrapped in **`ShufflingPlayer`**, a `ForwardingPlayer` that controls the shuffle order: a new order starts with the start/current item, a restored playlist gets the profile's saved order. It also saves the position before playlist changes. The service writes position, shuffle/repeat changes and the shuffle order into the profile the playlist belongs to.
 - **`Settings`** (prefs `settings`) holds only the root tree URIs; roots and their SAF permissions are app-wide.
 - **`ProfileStore`** / **`Profile`** hold per profile: name, color index into `ProfileStore.COLORS` (12 colors), tree selection, shuffle, repeat, current file + position, and `lastUsed` (set on activation). There is always exactly one active profile. The default profile (id `default`) is created on first start, takes over the old `settings` keys and can be renamed but not deleted. Profiles are stored in `files/profiles.json`. The shuffle play order (list of document URIs) is kept per profile in `files/profile_orders/<id>.txt`, cached in memory and written in the background. The store is a process-wide singleton shared by UI and service; all methods are synchronized.
+- The profile badge (`layout/profile_badge.xml`, painted by `ProfileDialogs.paintBadge`) shows the person icon for the default name "default", otherwise `Profile.initials()`: the upper-case first letters of the first two words. The title bar start is a custom view (`layout/toolbar_title.xml`: profile button + app name) because `Toolbar` places custom views after its own title.
 - **`ProfileDialogs`** – the profile popup (default profile first, then by `lastUsed`) and the create/edit form. "Neu" copies the active profile's settings.
 
 Key conventions and pitfalls:

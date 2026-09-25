@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     private MaterialToolbar toolbar;
     private View profileButton;
-    private ImageView profileIcon;
+    private View profileBadge;
     private View root;
     private ImageView infoIcon;
     private View infoDetails;
@@ -149,8 +149,8 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         toolbar.setOnMenuItemClickListener(this::onMenuItemClicked);
         profiles = ProfileStore.get(this);
         profileDialogs = new ProfileDialogs(this, profiles, new ProfileHost());
-        profileButton = toolbar.getMenu().findItem(R.id.action_profile).getActionView();
-        profileIcon = profileButton.findViewById(R.id.profile_icon);
+        profileButton = findViewById(R.id.profile_button);
+        profileBadge = profileButton.findViewById(R.id.profile_badge);
         profileButton.setOnClickListener(v -> profileDialogs.showProfiles());
         setUpAboutTitle();
         findViewById(R.id.info_area).setOnClickListener(v -> viewModel.clearInfo());
@@ -243,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     private void updateMenu() {
         final Profile active = profiles.getActive();
-        ProfileDialogs.paintProfileIcon(profileIcon, active.color);
+        ProfileDialogs.paintBadge(profileBadge, active);
         final CharSequence profileLabel = getString(R.string.profile_button, active.name);
         profileButton.setContentDescription(profileLabel);
         profileButton.setTooltipText(profileLabel);
@@ -268,16 +268,10 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     /** Makes the app name in the title bar open the about popup. */
     private void setUpAboutTitle() {
-        for (int i = 0; i < toolbar.getChildCount(); i++) {
-            final View child = toolbar.getChildAt(i);
-            if (child instanceof TextView && TextUtils.equals(((TextView) child).getText(), toolbar.getTitle())) {
-                child.setOnClickListener(v -> showAbout());
-                child.setBackgroundResource(android.R.drawable.list_selector_background);
-                child.setContentDescription(getText(R.string.about));
-                child.setTooltipText(getText(R.string.about));
-                return;
-            }
-        }
+        final View title = findViewById(R.id.app_title);
+        title.setOnClickListener(v -> showAbout());
+        title.setContentDescription(getText(R.string.about));
+        title.setTooltipText(getText(R.string.about));
     }
 
     /** Popup with app name, copyright and version. */

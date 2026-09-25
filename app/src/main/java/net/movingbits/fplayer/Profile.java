@@ -1,6 +1,7 @@
 package net.movingbits.fplayer;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -31,6 +32,23 @@ final class Profile {
 
     boolean isDefault() {
         return ProfileStore.DEFAULT_ID.equals(id);
+    }
+
+    /**
+     * Initials shown in the profile badge: the upper-case first letters of the first two words, or
+     * of the only word. {@code null} for the default name, which shows the person icon instead.
+     */
+    String initials() {
+        final String trimmed = name.trim();
+        if (trimmed.isEmpty() || trimmed.equals(ProfileStore.DEFAULT_NAME)) {
+            return null;
+        }
+        final String[] words = trimmed.split("\\s+");
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < Math.min(2, words.length); i++) {
+            sb.appendCodePoint(words[i].codePointAt(0));
+        }
+        return sb.toString().toUpperCase(Locale.getDefault());
     }
 
     /** Copies everything except id, name, color and timestamp from another profile. */

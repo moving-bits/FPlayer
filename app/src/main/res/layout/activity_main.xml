@@ -10,8 +10,11 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:menu="@menu/main_menu"
-        app:title="@string/app_name" />
+        app:contentInsetStart="4dp"
+        app:menu="@menu/main_menu">
+
+        <include layout="@layout/toolbar_title" />
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <!-- Info area (upper third) -->
     <FrameLayout

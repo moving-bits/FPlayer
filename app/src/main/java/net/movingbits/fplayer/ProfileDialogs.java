@@ -60,11 +60,22 @@ final class ProfileDialogs {
         return ColorUtils.calculateLuminance(background) > 0.45 ? 0xFF000000 : 0xFFFFFFFF;
     }
 
-    /** Colors a person icon on a circle (title bar button, list rows, swatches). */
-    static void paintProfileIcon(final ImageView icon, final int colorIndex) {
-        final int color = ProfileStore.COLORS[colorIndex];
-        icon.setBackgroundTintList(ColorStateList.valueOf(color));
-        icon.setImageTintList(ColorStateList.valueOf(iconColorOn(color)));
+    /**
+     * Shows a profile in a badge ({@code layout/profile_badge.xml}): its color, and its initials or,
+     * for the default name, the person icon.
+     */
+    static void paintBadge(final View badge, final Profile profile) {
+        final int color = ProfileStore.COLORS[profile.color];
+        final int foreground = iconColorOn(color);
+        final ImageView icon = badge.findViewById(R.id.profile_badge_icon);
+        final TextView initials = badge.findViewById(R.id.profile_badge_initials);
+        final String text = profile.initials();
+        badge.setBackgroundTintList(ColorStateList.valueOf(color));
+        icon.setImageTintList(ColorStateList.valueOf(foreground));
+        icon.setVisibility(text == null ? View.VISIBLE : View.GONE);
+        initials.setTextColor(foreground);
+        initials.setText(text);
+        initials.setVisibility(text == null ? View.GONE : View.VISIBLE);
     }
 
     // ----- Profile popup -----
@@ -134,7 +145,7 @@ final class ProfileDialogs {
         public void onBindViewHolder(@NonNull final Holder h, final int position) {
             final Profile profile = items.get(position);
             final boolean active = profile.id.equals(store.getActive().id);
-            paintProfileIcon(h.color, profile.color);
+            paintBadge(h.badge, profile);
             h.name.setText(profile.name);
             h.name.setTypeface(null, active ? Typeface.BOLD : Typeface.NORMAL);
             h.delete.setVisibility(profile.isDefault() ? View.INVISIBLE : View.VISIBLE);
@@ -152,7 +163,7 @@ final class ProfileDialogs {
 
         final class Holder extends RecyclerView.ViewHolder {
             final View row;
-            final ImageView color;
+            final View badge;
             final TextView name;
             final View edit;
             final View delete;
@@ -160,7 +171,7 @@ final class ProfileDialogs {
             Holder(final View view) {
                 super(view);
                 row = view.findViewById(R.id.profile_row);
-                color = view.findViewById(R.id.profile_color);
+                badge = view.findViewById(R.id.profile_badge);
                 name = view.findViewById(R.id.profile_name);
                 edit = view.findViewById(R.id.profile_edit);
                 delete = view.findViewById(R.id.profile_delete);

@@ -8,4 +8,6 @@
     <!-- Color swatches in the profile form -->
     <dimen name="profile_swatch_size">36dp</dimen>
     <dimen name="profile_swatch_margin">6dp</dimen>
+    <!-- Initials in the profile badge -->
+    <dimen name="profile_badge_text_size">13sp</dimen>
 </resources>

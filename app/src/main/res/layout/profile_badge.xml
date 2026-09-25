@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Profile badge: a circle in the profile color showing either the person icon (profile with the
+    default name) or the initials of the profile name. The size is set by the including layout.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/profile_badge"
+    android:layout_width="32dp"
+    android:layout_height="32dp"
+    android:background="@drawable/bg_profile_circle"
+    android:importantForAccessibility="noHideDescendants">
+
+    <ImageView
+        android:id="@+id/profile_badge_icon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="4dp"
+        android:src="@drawable/ic_person"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/profile_badge_initials"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textSize="@dimen/profile_badge_text_size"
+        android:textStyle="bold"
+        android:visibility="gone" />
+</FrameLayout>

@@ -39,7 +39,7 @@ import org.json.JSONObject;
 final class ProfileStore {
 
     static final String DEFAULT_ID = "default";
-    private static final String DEFAULT_NAME = "default";
+    static final String DEFAULT_NAME = "default";
     private static final int DEFAULT_COLOR = 4;
 
     /** Twelve well distinguishable profile colors (ARGB). */
