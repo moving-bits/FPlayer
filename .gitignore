@@ -1,0 +1,40 @@
+# generated code
+bin/
+gen/
+annotation_gen/
+generated/
+
+# vm crash logs
+hs_err_pid*.log
+
+# annotation processor log files
+androidannotations.log
+
+# developer specific settings and credentials
+local.properties
+private.properties
+
+# KDE directory settings
+.directory
+
+# build system temporary files
+.gradle/
+/app/build/
+build
+build-cache/
+# build system user specific files
+main/gradle.properties
+
+# ignore IDEA settings (contents instead of the folder, otherwise the exception below does not apply)
+/.idea/*
+# but have a common checkstyle configuration
+!/.idea/checkstyle-idea.xml
+*.iml
+# temporary files of the CheckStyle-IDEA plugin
+checkstyleidea.tmp/
+
+# ignore AS layout captures
+/captures/
+# ignore Claude internal files
+.claude/
+.externalNativeBuild/

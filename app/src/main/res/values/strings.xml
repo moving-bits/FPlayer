@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">FPlayer</string>
+
+    <string name="action_order_sequential">Reihenfolge: wie eingelesen</string>
+    <string name="action_order_shuffle">Reihenfolge: zufällig</string>
+    <string name="action_add_folder">Verzeichnis hinzufügen</string>
+    <string name="action_repeat_off">Wiederholen: aus</string>
+    <string name="action_repeat_on">Wiederholen: ein</string>
+
+    <string name="button_previous">Vorheriger Titel</string>
+    <string name="button_rewind">10 Sekunden zurück</string>
+    <string name="button_play">Wiedergabe</string>
+    <string name="button_pause">Pause</string>
+    <string name="button_forward">10 Sekunden weiter</string>
+    <string name="button_next">Nächster Titel</string>
+
+    <string name="expand">Aufklappen</string>
+    <string name="collapse">Zuklappen</string>
+    <string name="select">Auswählen</string>
+    <string name="deselect">Abwählen</string>
+    <string name="cover">Coverbild</string>
+    <string name="position">Abspielposition</string>
+    <string name="remove_folder">Verzeichnis entfernen</string>
+
+    <string name="empty_hint">Noch kein Verzeichnis konfiguriert.\nTippe oben auf das Ordnersymbol, um ein Verzeichnis hinzuzufügen.</string>
+
+    <string name="info_files">Dateien: %d</string>
+    <string name="info_total_duration">Gesamtspieldauer: %s</string>
+    <string name="info_duration_pending">Gesamtspieldauer: wird ermittelt …</string>
+    <string name="info_metadata_pending">Metadaten werden gelesen …</string>
+    <string name="info_title">Titel: %s</string>
+    <string name="info_artist">Interpret: %s</string>
+    <string name="info_album">Album: %s</string>
+    <string name="info_duration">Länge: %s</string>
+    <string name="info_unknown">–</string>
+
+    <string name="remove_folder_title">Verzeichnis entfernen?</string>
+    <string name="remove_folder_message">„%s“ wird aus der Liste entfernt und die Zugriffsberechtigung freigegeben. Die Dateien selbst bleiben erhalten.</string>
+    <string name="remove">Entfernen</string>
+    <string name="cancel">Abbrechen</string>
+
+    <string name="folder_already_added">Dieses Verzeichnis ist bereits vorhanden.</string>
+    <string name="folder_permission_failed">Zugriff auf das Verzeichnis konnte nicht dauerhaft gespeichert werden.</string>
+    <string name="nothing_selected">Keine Titel ausgewählt.</string>
+</resources>

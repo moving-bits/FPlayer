@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:menu="@menu/main_menu"
+        app:title="@string/app_name" />
+
+    <!-- Info area (upper third) -->
+    <FrameLayout
+        android:id="@+id/info_area"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground">
+
+        <ImageView
+            android:id="@+id/info_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:padding="16dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_genres"
+            app:tint="?attr/colorPrimary" />
+
+        <include
+            android:id="@+id/info_details"
+            layout="@layout/info_details"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Directory tree (middle and lower third) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/tree_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingVertical="4dp" />
+
+        <TextView
+            android:id="@+id/empty_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/empty_hint"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:visibility="gone" />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/scan_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/now_playing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp"
+        android:singleLine="true"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:visibility="gone" />
+
+    <!-- Button bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingVertical="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_previous"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:contentDescription="@string/button_previous"
+            android:tooltipText="@string/button_previous"
+            app:icon="@drawable/ic_skip_previous"
+            app:iconSize="28dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_rewind"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:contentDescription="@string/button_rewind"
+            android:tooltipText="@string/button_rewind"
+            app:icon="@drawable/ic_keyboard_double_arrow_left"
+            app:iconSize="28dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_play_pause"
+            style="?attr/materialIconButtonFilledStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:contentDescription="@string/button_play"
+            android:tooltipText="@string/button_play"
+            app:icon="@drawable/ic_play_arrow"
+            app:iconSize="36dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_forward"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:contentDescription="@string/button_forward"
+            android:tooltipText="@string/button_forward"
+            app:icon="@drawable/ic_keyboard_double_arrow_right"
+            app:iconSize="28dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_next"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:contentDescription="@string/button_next"
+            android:tooltipText="@string/button_next"
+            app:icon="@drawable/ic_skip_next"
+            app:iconSize="28dp" />
+    </LinearLayout>
+</LinearLayout>

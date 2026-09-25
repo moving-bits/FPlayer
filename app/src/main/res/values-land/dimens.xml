@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="cover_size">96dp</dimen>
+    <dimen name="cover_placeholder_padding">16dp</dimen>
+</resources>

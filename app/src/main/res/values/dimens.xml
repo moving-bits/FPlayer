@@ -1,0 +1,8 @@
+<resources>
+    <!-- Width of the expand/collapse icon and the selection icon; also the indentation per level -->
+    <dimen name="tree_icon_width">32dp</dimen>
+    <!-- Side length of the cover image in the info area -->
+    <dimen name="cover_size">136dp</dimen>
+    <!-- Padding of the app icon when it is shown as a placeholder instead of a cover -->
+    <dimen name="cover_placeholder_padding">24dp</dimen>
+</resources>
