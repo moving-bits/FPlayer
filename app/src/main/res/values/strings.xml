@@ -42,4 +42,22 @@
     <string name="folder_already_added">Dieses Verzeichnis ist bereits vorhanden.</string>
     <string name="folder_permission_failed">Zugriff auf das Verzeichnis konnte nicht dauerhaft gespeichert werden.</string>
     <string name="nothing_selected">Keine Titel ausgewählt.</string>
+
+    <string name="profile_button">Profil: %s</string>
+    <string name="profiles_title">Profile</string>
+    <string name="profile_new">Neu</string>
+    <string name="ok">OK</string>
+    <string name="profile_new_title">Neues Profil</string>
+    <string name="profile_edit_title">Profil bearbeiten</string>
+    <string name="profile_name">Name</string>
+    <string name="profile_color">Farbe</string>
+    <string name="profile_color_item">Farbe %d</string>
+    <string name="profile_name_pattern">Profil %d</string>
+    <string name="profile_name_empty">Bitte einen Namen eingeben.</string>
+    <string name="profile_name_taken">Dieser Name ist bereits vergeben.</string>
+    <string name="profile_edit">Profil bearbeiten</string>
+    <string name="profile_delete">Profil löschen</string>
+    <string name="profile_delete_title">Profil löschen?</string>
+    <string name="profile_delete_message">Das Profil „%s“ wird mit allen Einstellungen gelöscht.</string>
+    <string name="delete">Löschen</string>
 </resources>

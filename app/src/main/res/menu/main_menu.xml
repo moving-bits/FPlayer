@@ -2,21 +2,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_profile"
+        android:title="@string/profiles_title"
+        app:actionLayout="@layout/action_profile"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_play_order"
         android:icon="@drawable/ic_arrow_right_alt"
         android:title="@string/action_order_sequential"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         app:tooltipText="@string/action_order_sequential" />
     <item
         android:id="@+id/action_repeat"
         android:icon="@drawable/ic_repeat"
         android:title="@string/action_repeat_off"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         app:tooltipText="@string/action_repeat_off" />
     <item
         android:id="@+id/action_add_folder"
         android:icon="@drawable/ic_folder_open"
         android:title="@string/action_add_folder"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         app:tooltipText="@string/action_add_folder" />
 </menu>

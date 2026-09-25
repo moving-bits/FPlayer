@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One row of the profile popup: color, name (tap to activate), edit and delete buttons -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp">
+
+    <LinearLayout
+        android:id="@+id/profile_row"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/profile_color"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@drawable/bg_profile_circle"
+            android:importantForAccessibility="no"
+            android:padding="4dp"
+            android:src="@drawable/ic_person" />
+
+        <TextView
+            android:id="@+id/profile_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/profile_edit"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/profile_edit"
+        android:src="@drawable/ic_edit"
+        android:tooltipText="@string/profile_edit" />
+
+    <ImageButton
+        android:id="@+id/profile_delete"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/profile_delete"
+        android:src="@drawable/ic_delete"
+        android:tooltipText="@string/profile_delete" />
+</LinearLayout>

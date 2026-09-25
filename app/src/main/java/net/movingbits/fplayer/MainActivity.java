@@ -57,8 +57,13 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     private MainViewModel viewModel;
     private TreeAdapter adapter;
+    private ProfileStore profiles;
+    private ProfileDialogs profileDialogs;
+    private final Random random = new Random();
 
     private MaterialToolbar toolbar;
+    private View profileButton;
+    private ImageView profileIcon;
     private View root;
     private ImageView infoIcon;
     private View infoDetails;
@@ -140,6 +145,11 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         });
 
         toolbar.setOnMenuItemClickListener(this::onMenuItemClicked);
+        profiles = ProfileStore.get(this);
+        profileDialogs = new ProfileDialogs(this, profiles, new ProfileHost());
+        profileButton = toolbar.getMenu().findItem(R.id.action_profile).getActionView();
+        profileIcon = profileButton.findViewById(R.id.profile_icon);
+        profileButton.setOnClickListener(v -> profileDialogs.showProfiles());
         findViewById(R.id.info_area).setOnClickListener(v -> viewModel.clearInfo());
 
         adapter = new TreeAdapter(this);
@@ -178,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
             }
             controller.addListener(playerListener);
             if (!Boolean.TRUE.equals(viewModel.isScanning().getValue())) {
+                restorePlaybackOnce();
                 syncPlaylist();
             }
             updatePlayerUi();
@@ -203,16 +214,18 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
     private boolean onMenuItemClicked(final MenuItem item) {
         final int id = item.getItemId();
         if (id == R.id.action_play_order) {
-            final boolean shuffle = !Settings.isShuffle(this);
-            Settings.setShuffle(this, shuffle);
+            final Profile active = profiles.getActive();
+            final boolean shuffle = !active.shuffle;
+            profiles.setShuffle(active.id, shuffle);
             if (controller != null) {
                 controller.setShuffleModeEnabled(shuffle);
             }
             updateMenu();
             return true;
         } else if (id == R.id.action_repeat) {
-            final boolean repeat = !Settings.isRepeat(this);
-            Settings.setRepeat(this, repeat);
+            final Profile active = profiles.getActive();
+            final boolean repeat = !active.repeat;
+            profiles.setRepeat(active.id, repeat);
             if (controller != null) {
                 controller.setRepeatMode(repeat ? Player.REPEAT_MODE_ALL : Player.REPEAT_MODE_OFF);
             }
@@ -226,9 +239,15 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
     }
 
     private void updateMenu() {
+        final Profile active = profiles.getActive();
+        ProfileDialogs.paintProfileIcon(profileIcon, active.color);
+        final CharSequence profileLabel = getString(R.string.profile_button, active.name);
+        profileButton.setContentDescription(profileLabel);
+        profileButton.setTooltipText(profileLabel);
+
         final Menu menu = toolbar.getMenu();
         final MenuItem order = menu.findItem(R.id.action_play_order);
-        final boolean shuffle = Settings.isShuffle(this);
+        final boolean shuffle = active.shuffle;
         final boolean enabled = viewModel.hasSelection();
         order.setIcon(shuffle ? R.drawable.ic_shuffle : R.drawable.ic_arrow_right_alt);
         setLabel(order, shuffle ? R.string.action_order_shuffle : R.string.action_order_sequential);
@@ -239,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         }
 
         final MenuItem repeatItem = menu.findItem(R.id.action_repeat);
-        final boolean repeat = Settings.isRepeat(this);
+        final boolean repeat = active.repeat;
         repeatItem.setIcon(repeat ? R.drawable.ic_repeat_on : R.drawable.ic_repeat);
         setLabel(repeatItem, repeat ? R.string.action_repeat_on : R.string.action_repeat_off);
     }
@@ -277,6 +296,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         treeList.setVisibility(empty ? View.GONE : View.VISIBLE);
         renderInfo(viewModel.getInfoNode().getValue());
         if (!scanning) {
+            restorePlaybackOnce();
             syncPlaylist();
         }
         updatePlayerUi();
@@ -415,45 +435,121 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
             Snackbar.make(root, R.string.nothing_selected, Snackbar.LENGTH_SHORT).show();
             return;
         }
-        final boolean shuffle = Settings.isShuffle(this);
-        int startIndex = 0;
-        long startPosition = 0;
-
-        if (start != null && !start.directory) {
-            startIndex = Math.max(0, files.indexOf(start));
-        } else {
-            if (start != null) {
-                for (int i = 0; i < files.size(); i++) {
-                    if (files.get(i).isDescendantOf(start)) {
-                        startIndex = i;
-                        break;
-                    }
-                }
-            } else if (shuffle) {
-                startIndex = new Random().nextInt(files.size());
+        if (start == null) {
+            // play button: continue where the profile left off, if possible
+            if (!setUpProfilePlaylist(files)) {
+                setUpPlaylist(files, profiles.getActive().shuffle ? random.nextInt(files.size()) : 0, 0, false);
             }
-            // single directory in read order: continue at the saved position
-            final ResumeStore.Entry entry = shuffle ? null : viewModel.findResumeEntry(files);
-            if (entry != null) {
-                for (int i = 0; i < files.size(); i++) {
-                    if (files.get(i).uri.toString().equals(entry.fileUri)) {
-                        startIndex = i;
-                        startPosition = entry.positionMs;
-                        break;
-                    }
+        } else {
+            int startIndex = 0;
+            for (int i = 0; i < files.size(); i++) {
+                if (files.get(i) == start || files.get(i).isDescendantOf(start)) {
+                    startIndex = i;
+                    break;
                 }
+            }
+            setUpPlaylist(files, startIndex, 0, false);
+        }
+        controller.play();
+    }
+
+    /**
+     * Sets up the playlist of the active profile at its saved track and position (in its saved
+     * shuffle order), paused. Returns {@code false} if the saved track is not among the selected files.
+     */
+    private boolean setUpProfilePlaylist(final List<TreeNode> files) {
+        final Profile profile = profiles.getActive();
+        if (profile.currentFile == null) {
+            return false;
+        }
+        for (int i = 0; i < files.size(); i++) {
+            if (files.get(i).uri.toString().equals(profile.currentFile)) {
+                setUpPlaylist(files, i, profile.positionMs, true);
+                return true;
             }
         }
+        return false;
+    }
 
+    /** Replaces the playlist with the given files (tree order) and prepares it without starting. */
+    private void setUpPlaylist(final List<TreeNode> files, final int startIndex, final long startPositionMs,
+                               final boolean restoreShuffleOrder) {
+        final Profile profile = profiles.getActive();
         final List<MediaItem> items = new ArrayList<>(files.size());
         for (TreeNode file : files) {
-            items.add(toMediaItem(file));
+            items.add(toMediaItem(file, profile.id, restoreShuffleOrder));
         }
-        controller.setShuffleModeEnabled(shuffle);
-        controller.setRepeatMode(Settings.isRepeat(this) ? Player.REPEAT_MODE_ALL : Player.REPEAT_MODE_OFF);
-        controller.setMediaItems(items, startIndex, startPosition);
+        controller.setShuffleModeEnabled(profile.shuffle);
+        controller.setRepeatMode(profile.repeat ? Player.REPEAT_MODE_ALL : Player.REPEAT_MODE_OFF);
+        controller.setMediaItems(items, startIndex, startPositionMs);
         controller.prepare();
-        controller.play();
+    }
+
+    /**
+     * After the app start, sets up the playlist of the active profile (paused) once the tree is
+     * loaded, unless the service is still playing.
+     */
+    private void restorePlaybackOnce() {
+        if (controller == null || viewModel.isPlaybackRestored()) {
+            return;
+        }
+        viewModel.setPlaybackRestored();
+        if (controller.getMediaItemCount() == 0) {
+            setUpProfilePlaylist(viewModel.getSelectedFiles());
+        }
+    }
+
+    /** Saves the current track and position of the running playlist in its profile. */
+    private void savePlaybackState() {
+        if (controller == null || controller.getPlaybackState() == Player.STATE_ENDED) {
+            return;
+        }
+        final MediaItem current = controller.getCurrentMediaItem();
+        final String profileId = PlaybackService.profileOf(current);
+        if (profileId != null) {
+            profiles.setPlayback(profileId, current.mediaId, Math.max(0, controller.getCurrentPosition()));
+        }
+    }
+
+    /**
+     * Loads the settings of the newly active profile: tree selection, play order, repeat mode and
+     * its playlist at the saved position.
+     */
+    private void onActiveProfileChanged(final boolean continuePlayback) {
+        final boolean wasPlaying = controller != null && controller.isPlaying();
+        if (controller != null) {
+            // playWhenReady survives clearing the playlist; the new one is to start paused.
+            // No stop(): the service would save the old playlist once more.
+            controller.pause();
+            controller.clearMediaItems();
+        }
+        viewModel.applyActiveProfileSelection();
+        if (controller != null) {
+            final Profile profile = profiles.getActive();
+            controller.setShuffleModeEnabled(profile.shuffle);
+            controller.setRepeatMode(profile.repeat ? Player.REPEAT_MODE_ALL : Player.REPEAT_MODE_OFF);
+            if (setUpProfilePlaylist(viewModel.getSelectedFiles()) && continuePlayback && wasPlaying) {
+                controller.play();
+            }
+        }
+        updatePlayerUi();
+    }
+
+    private final class ProfileHost implements ProfileDialogs.Host {
+        @Override
+        public void savePlaybackState() {
+            MainActivity.this.savePlaybackState();
+        }
+
+        @Override
+        public void onActiveProfileChanged(final boolean continuePlayback) {
+            MainActivity.this.onActiveProfileChanged(continuePlayback);
+        }
+
+        @Override
+        public void onProfileEdited() {
+            updateMenu();
+        }
     }
 
     /**
@@ -514,7 +610,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         final List<MediaItem> items = new ArrayList<>(pending.size());
         final List<String> ids = new ArrayList<>(pending.size());
         for (TreeNode file : pending) {
-            items.add(toMediaItem(file));
+            items.add(toMediaItem(file, playlistProfileId(), false));
             ids.add(file.uri.toString());
         }
         controller.addMediaItems(position, items);
@@ -523,9 +619,10 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         return position + items.size();
     }
 
-    private static MediaItem toMediaItem(final TreeNode file) {
+    private static MediaItem toMediaItem(final TreeNode file, final String profileId, final boolean restoreShuffleOrder) {
         final Bundle extras = new Bundle();
-        extras.putString(PlaybackService.EXTRA_DIRECTORY_URI, file.parent.uri.toString());
+        extras.putString(PlaybackService.EXTRA_PROFILE_ID, profileId);
+        extras.putBoolean(PlaybackService.EXTRA_RESTORE_ORDER, restoreShuffleOrder);
         final MediaMetadata.Builder metadata = new MediaMetadata.Builder().setDisplayTitle(file.name);
         if (file.metadataLoaded) {
             metadata.setTitle(file.title != null ? file.title : file.name).setArtist(file.artist).setAlbumTitle(file.album);
@@ -538,6 +635,12 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
                         .build())
                 .setMediaMetadata(metadata.build())
                 .build();
+    }
+
+    /** The profile the running playlist belongs to (normally the active one). */
+    private String playlistProfileId() {
+        final String owner = controller != null ? PlaybackService.profileOf(controller.getCurrentMediaItem()) : null;
+        return owner != null ? owner : profiles.getActive().id;
     }
 
     private boolean hasActivePlaylist() {

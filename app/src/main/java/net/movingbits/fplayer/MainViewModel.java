@@ -16,9 +16,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,11 +32,13 @@ public class MainViewModel extends AndroidViewModel {
 
     private static final int COVER_MAX_SIZE_PX = 512;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final ResumeStore resumeStore;
+    private final ProfileStore profiles;
 
     private final List<TreeNode> roots = new ArrayList<>();
     private int pendingScans;
     private String autoInfoMediaId;
+    /** Whether the active profile's playlist has been set up after the app start. */
+    private boolean playbackRestored;
 
     /** Incremented on every change of structure, selection or expansion state. */
     private final MutableLiveData<Integer> treeVersion = new MutableLiveData<>(0);
@@ -48,7 +48,7 @@ public class MainViewModel extends AndroidViewModel {
 
     public MainViewModel(@NonNull final Application application) {
         super(application);
-        resumeStore = new ResumeStore(application);
+        profiles = ProfileStore.get(application);
 
         // drop base directories without a (still valid) permission
         final Set<Uri> granted = new HashSet<>();
@@ -68,7 +68,8 @@ public class MainViewModel extends AndroidViewModel {
             Settings.setRoots(application, valid);
         }
 
-        scanExecutor.execute(this::removeStaleResumeEntries);
+        final ContentResolver resolver = application.getContentResolver();
+        scanExecutor.execute(() -> profiles.removeMissingCurrentFiles(uri -> TreeScanner.exists(resolver, Uri.parse(uri))));
         for (Uri uri : valid) {
             scan(uri);
         }
@@ -113,7 +114,7 @@ public class MainViewModel extends AndroidViewModel {
         } catch (SecurityException ignored) {
             // permission was already gone
         }
-        resumeStore.removeWithPrefix(documentUriPrefix(root.treeUri));
+        profiles.removeWithPrefix(documentUriPrefix(root.treeUri));
         saveSelection();
         final TreeNode info = infoNode.getValue();
         if (info != null && info.isDescendantOf(root)) {
@@ -194,7 +195,7 @@ public class MainViewModel extends AndroidViewModel {
                 pendingPrefixes.add(documentUriPrefix(treeUri));
             }
         }
-        for (String stored : Settings.getSelection(getApplication())) {
+        for (String stored : profiles.getActive().copyOfSelection()) {
             for (String prefix : pendingPrefixes) {
                 if (stored.startsWith(prefix)) {
                     result.add(stored);
@@ -202,7 +203,7 @@ public class MainViewModel extends AndroidViewModel {
                 }
             }
         }
-        Settings.setSelection(getApplication(), result);
+        profiles.setSelection(result);
     }
 
     private static void encodeSelection(final TreeNode node, final Set<String> result) {
@@ -284,37 +285,23 @@ public class MainViewModel extends AndroidViewModel {
         }
     }
 
-    /**
-     * Saved playback position, provided exactly one directory is played: either all files are located
-     * directly in the same directory, or the selection covers exactly one directory including its
-     * subdirectories. If there are several entries, the most recently saved one wins.
-     */
-    ResumeStore.Entry findResumeEntry(final List<TreeNode> files) {
-        TreeNode common = files.get(0).parent;
-        boolean sameParent = true;
-        for (TreeNode file : files) {
-            sameParent &= file.parent == common;
-            while (common != null && !file.isDescendantOf(common)) {
-                common = common.parent;
-            }
+    /** Replaces the selection in the tree with the one stored in the (newly) active profile. */
+    void applyActiveProfileSelection() {
+        final Set<String> stored = profiles.getActive().copyOfSelection();
+        for (TreeNode root : roots) {
+            setSelectedRecursive(root, false);
+            restoreSelection(root, stored);
         }
-        if (common == null || (!sameParent && common.selectedFiles != common.totalFiles)) {
-            return null;
-        }
-        final Set<TreeNode> directories = new LinkedHashSet<>();
-        final Set<String> fileUris = new HashSet<>();
-        for (TreeNode file : files) {
-            directories.add(file.parent);
-            fileUris.add(file.uri.toString());
-        }
-        ResumeStore.Entry best = null;
-        for (TreeNode directory : directories) {
-            final ResumeStore.Entry entry = resumeStore.get(directory.uri.toString());
-            if (entry != null && fileUris.contains(entry.fileUri) && (best == null || entry.savedAt > best.savedAt)) {
-                best = entry;
-            }
-        }
-        return best;
+        bumpTreeVersion();
+    }
+
+    /** Whether the active profile's playlist has been set up since the app start. */
+    boolean isPlaybackRestored() {
+        return playbackRestored;
+    }
+
+    void setPlaybackRestored() {
+        playbackRestored = true;
     }
 
     /** Finds a file in the tree by its document URI; {@code null} if not (or no longer) present. */
@@ -436,7 +423,7 @@ public class MainViewModel extends AndroidViewModel {
         final ContentResolver resolver = getApplication().getContentResolver();
         scanExecutor.execute(() -> {
             final TreeNode root = TreeScanner.scan(resolver, treeUri);
-            restoreSelection(root, Settings.getSelection(getApplication()));
+            restoreSelection(root, profiles.getActive().copyOfSelection());
             mainHandler.post(() -> {
                 pendingScans--;
                 // may already have been removed again while scanning
@@ -447,16 +434,6 @@ public class MainViewModel extends AndroidViewModel {
                 bumpTreeVersion();
             });
         });
-    }
-
-    /** Removes saved playback positions whose file no longer exists. */
-    private void removeStaleResumeEntries() {
-        final ContentResolver resolver = getApplication().getContentResolver();
-        for (Map.Entry<String, ResumeStore.Entry> e : resumeStore.getAll().entrySet()) {
-            if (!TreeScanner.exists(resolver, Uri.parse(e.getValue().fileUri))) {
-                resumeStore.remove(e.getKey());
-            }
-        }
     }
 
     private void bumpTreeVersion() {

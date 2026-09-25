@@ -5,19 +5,16 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-/** Persistent configuration: base directories, play order, repeat mode and tree selection. */
+/**
+ * App-wide configuration: the base directories, shared by all profiles. Everything else is stored
+ * per profile in {@link ProfileStore}.
+ */
 final class Settings {
 
     private static final String PREFS = "settings";
     private static final String KEY_ROOTS = "roots";
-    private static final String KEY_SHUFFLE = "shuffle";
-    private static final String KEY_REPEAT = "repeat";
-    private static final String KEY_SELECTION = "selection";
 
     private Settings() {
     }
@@ -47,33 +44,5 @@ final class Settings {
             sb.append(uri.toString());
         }
         prefs(context).edit().putString(KEY_ROOTS, sb.toString()).apply();
-    }
-
-    static boolean isShuffle(final Context context) {
-        return prefs(context).getBoolean(KEY_SHUFFLE, false);
-    }
-
-    static void setShuffle(final Context context, final boolean shuffle) {
-        prefs(context).edit().putBoolean(KEY_SHUFFLE, shuffle).apply();
-    }
-
-    static boolean isRepeat(final Context context) {
-        return prefs(context).getBoolean(KEY_REPEAT, false);
-    }
-
-    static void setRepeat(final Context context, final boolean repeat) {
-        prefs(context).edit().putBoolean(KEY_REPEAT, repeat).apply();
-    }
-
-    /**
-     * Stored selection in the tree: document URIs of fully selected directories as well as of
-     * individually selected files.
-     */
-    static Set<String> getSelection(final Context context) {
-        return new HashSet<>(prefs(context).getStringSet(KEY_SELECTION, Collections.emptySet()));
-    }
-
-    static void setSelection(final Context context, final Set<String> selection) {
-        prefs(context).edit().putStringSet(KEY_SELECTION, new HashSet<>(selection)).apply();
     }
 }

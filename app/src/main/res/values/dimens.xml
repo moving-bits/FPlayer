@@ -5,4 +5,7 @@
     <dimen name="cover_size">136dp</dimen>
     <!-- Padding of the app icon when it is shown as a placeholder instead of a cover -->
     <dimen name="cover_placeholder_padding">24dp</dimen>
+    <!-- Color swatches in the profile form -->
+    <dimen name="profile_swatch_size">36dp</dimen>
+    <dimen name="profile_swatch_margin">6dp</dimen>
 </resources>
