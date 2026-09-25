@@ -1,3 +1,6 @@
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 plugins {
     alias(libs.plugins.android.application)
     checkstyle
@@ -33,6 +36,16 @@ tasks.named("check") {
     dependsOn(checkstyleMain)
 }
 
+// Version derived from the build date: name "YYYY.MM.DD" (debug builds: "YYYY.MM.DD-<git short hash>"),
+// code YYYYMMDD.
+val buildDate: LocalDate = LocalDate.now()
+val dateVersionName: String = buildDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+val dateVersionCode: Int = buildDate.format(DateTimeFormatter.BASIC_ISO_DATE).toInt()
+val gitShortHash: String = providers.exec {
+    commandLine("git", "rev-parse", "--short", "HEAD")
+    isIgnoreExitValue = true
+}.standardOutput.asText.get().trim().ifEmpty { "nogit" }
+
 android {
     namespace = "net.movingbits.fplayer"
     compileSdk = 36
@@ -41,11 +54,14 @@ android {
         applicationId = "net.movingbits.fplayer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = dateVersionCode
+        versionName = dateVersionName
     }
 
     buildTypes {
+        debug {
+            versionNameSuffix = "-$gitShortHash"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

@@ -43,6 +43,12 @@
     <string name="folder_permission_failed">Zugriff auf das Verzeichnis konnte nicht dauerhaft gespeichert werden.</string>
     <string name="nothing_selected">Keine Titel ausgewählt.</string>
 
+    <string name="about">Über FPlayer</string>
+    <string name="about_info">A free folder audio player</string>
+    <string name="about_copyright_single">© %1$d moving-bits.net</string>
+    <string name="about_copyright_range">© %1$d-%2$d moving-bits.net</string>
+    <string name="about_version">Version %s</string>
+
     <string name="profile_button">Profil: %s</string>
     <string name="profiles_title">Profile</string>
     <string name="profile_new">Neu</string>

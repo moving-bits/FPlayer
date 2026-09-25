@@ -2,6 +2,7 @@ package net.movingbits.fplayer;
 
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -33,6 +34,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -150,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         profileButton = toolbar.getMenu().findItem(R.id.action_profile).getActionView();
         profileIcon = profileButton.findViewById(R.id.profile_icon);
         profileButton.setOnClickListener(v -> profileDialogs.showProfiles());
+        setUpAboutTitle();
         findViewById(R.id.info_area).setOnClickListener(v -> viewModel.clearInfo());
 
         adapter = new TreeAdapter(this);
@@ -261,6 +264,44 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         final boolean repeat = active.repeat;
         repeatItem.setIcon(repeat ? R.drawable.ic_repeat_on : R.drawable.ic_repeat);
         setLabel(repeatItem, repeat ? R.string.action_repeat_on : R.string.action_repeat_off);
+    }
+
+    /** Makes the app name in the title bar open the about popup. */
+    private void setUpAboutTitle() {
+        for (int i = 0; i < toolbar.getChildCount(); i++) {
+            final View child = toolbar.getChildAt(i);
+            if (child instanceof TextView && TextUtils.equals(((TextView) child).getText(), toolbar.getTitle())) {
+                child.setOnClickListener(v -> showAbout());
+                child.setBackgroundResource(android.R.drawable.list_selector_background);
+                child.setContentDescription(getText(R.string.about));
+                child.setTooltipText(getText(R.string.about));
+                return;
+            }
+        }
+    }
+
+    /** Popup with app name, copyright and version. */
+    private void showAbout() {
+        final View content = getLayoutInflater().inflate(R.layout.dialog_about, null);
+        final int firstYear = 2026;
+        final int year = Calendar.getInstance().get(Calendar.YEAR);
+        ((TextView) content.findViewById(R.id.about_info)).setText(R.string.about_info);
+        ((TextView) content.findViewById(R.id.about_copyright)).setText(year > firstYear
+                ? getString(R.string.about_copyright_range, firstYear, year)
+                : getString(R.string.about_copyright_single, firstYear));
+        ((TextView) content.findViewById(R.id.about_version)).setText(getString(R.string.about_version, versionName()));
+        new MaterialAlertDialogBuilder(this)
+                .setView(content)
+                .setPositiveButton(R.string.ok, null)
+                .show();
+    }
+
+    private String versionName() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return "?";
+        }
     }
 
     /** Sets the title (also used for accessibility) and the tooltip of a menu item together. */

@@ -16,6 +16,8 @@ Gradle 9.8 wrapper + AGP 9.4.1 (needs Gradle ≥ 9.6), version catalog in `gradl
 ./gradlew checkstyleMain     # also part of `check`; any warning fails (maxWarnings = 0)
 ```
 
+Versioning is automatic (`app/build.gradle.kts`): `versionName` is the build date `YYYY.MM.DD`; debug builds append `-<git short hash of HEAD>` via `versionNameSuffix`. `versionCode` is `YYYYMMDD`, so at most one release per day gets a distinct code. The about popup (tap the app name in the title bar) reads the version from `PackageManager`; the copyright year range is computed at runtime (`MainActivity.showAbout`).
+
 Run `./gradlew checkstyleMain assembleDebug lintDebug` after every change. The Checkstyle config is `checkstyle.xml` in the project root, with `suppressions.xml` referenced via `${config_loc}`. Android Studio uses the same file through the CheckStyle-IDEA plugin (`.idea/checkstyle-idea.xml`, the only committed `.idea` file). Gradle copies both files to `app/build/checkstyle-config`. Keep the Checkstyle version in `libs.versions.toml` in sync with the plugin's bundled version, currently 14.1.0.
 
 Code style enforced by the config:
