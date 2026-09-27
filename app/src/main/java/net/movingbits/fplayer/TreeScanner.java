@@ -18,7 +18,7 @@ final class TreeScanner {
      * Supported file extensions. WMA is deliberately missing: ExoPlayer/Media3 cannot read the ASF
      * container format, so such files would not be playable.
      */
-    private static final String[] AUDIO_EXTENSIONS = {".mp3", ".m4a"};
+    private static final String[] AUDIO_EXTENSIONS = {".mp3", ".m4a", ".wma"};
 
     private static final String[] PROJECTION = {
             Document.COLUMN_DOCUMENT_ID,

@@ -83,5 +83,6 @@ dependencies {
     implementation(libs.material)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.session)
+    implementation(files("libs/lib-decoder-ffmpeg-release.aar"))
     implementation(libs.recyclerview)
 }
