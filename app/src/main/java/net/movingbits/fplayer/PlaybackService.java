@@ -19,6 +19,7 @@ import androidx.media3.common.Timeline;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.session.MediaSession;
 import androidx.media3.session.MediaSessionService;
 
@@ -68,10 +69,11 @@ public class PlaybackService extends MediaSessionService {
         super.onCreate();
         profiles = ProfileStore.get(this);
 
-        // prefer own extensions + configure extractor
+        // prefer own extensions (FFmpeg decoders) + add the ASF extractor for WMA files
         final DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(this)
                 .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER);
         player = new ExoPlayer.Builder(this, renderersFactory)
+                .setMediaSourceFactory(new DefaultMediaSourceFactory(this, new AudioExtractorsFactory()))
                 .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(C.USAGE_MEDIA)
                         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)

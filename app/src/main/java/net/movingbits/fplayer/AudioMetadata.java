@@ -28,6 +28,12 @@ final class AudioMetadata {
 
     /** Reads the tags of a file. Blocking – do not call on the main thread. */
     static AudioMetadata read(final Context context, final Uri uri) {
+        // Android does not know WMA: read the tags from the ASF header
+        final AsfHeader asf = AsfHeader.read(context, uri);
+        if (asf != null) {
+            return new AudioMetadata(asf.title, asf.artist, asf.album,
+                    asf.durationUs > 0 ? asf.durationUs / 1000 : TreeNode.DURATION_UNKNOWN);
+        }
         final MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(context, uri);
@@ -53,10 +59,16 @@ final class AudioMetadata {
      * Returns {@code null} if there is none. Blocking – do not call on the main thread.
      */
     static Bitmap readCover(final Context context, final Uri uri, final int maxSize) {
+        final AsfHeader asf = AsfHeader.read(context, uri);
         final MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
-            retriever.setDataSource(context, uri);
-            final byte[] data = retriever.getEmbeddedPicture();
+            final byte[] data;
+            if (asf != null) {
+                data = asf.picture; // WM/Picture
+            } else {
+                retriever.setDataSource(context, uri);
+                data = retriever.getEmbeddedPicture();
+            }
             if (data == null) {
                 return null;
             }
