@@ -38,6 +38,7 @@ public class MainViewModel extends AndroidViewModel {
     private final List<TreeNode> roots = new ArrayList<>();
     private int pendingScans;
     private String autoInfoMediaId;
+    private boolean coverEnlarged;
     /** Whether the active profile's playlist has been set up after the app start. */
     private boolean playbackRestored;
     /** Whether the tree still has to be opened at the playing track after a finished scan. */
@@ -392,6 +393,15 @@ public class MainViewModel extends AndroidViewModel {
 
     void clearInfo() {
         infoNode.setValue(null);
+    }
+
+    /** Whether the info area shows only the large cover instead of the details. */
+    boolean isCoverEnlarged() {
+        return coverEnlarged;
+    }
+
+    void setCoverEnlarged(final boolean enlarged) {
+        coverEnlarged = enlarged;
     }
 
     LiveData<Cover> getCover() {

@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -157,7 +158,9 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         profileBadge = profileButton.findViewById(R.id.profile_badge);
         profileButton.setOnClickListener(v -> profileDialogs.showProfiles());
         setUpAboutTitle();
-        findViewById(R.id.info_area).setOnClickListener(v -> viewModel.clearInfo());
+        findViewById(R.id.info_area).setOnClickListener(v -> onInfoAreaTapped());
+        // the ScrollView around the texts would swallow taps on its own
+        findViewById(R.id.info_texts).setOnClickListener(v -> onInfoAreaTapped());
 
         adapter = new TreeAdapter(this);
         treeList.setLayoutManager(new LinearLayoutManager(this));
@@ -384,6 +387,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     @Override
     public void onTap(final TreeNode node) {
+        viewModel.setCoverEnlarged(false);
         viewModel.showInfo(node);
     }
 
@@ -415,14 +419,26 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     // ----- Info area -----
 
-    private void renderInfo(final TreeNode node) {
-        if (node == null) {
-            infoIcon.setVisibility(View.VISIBLE);
-            infoDetails.setVisibility(View.GONE);
+    /** While a track is active, switches between large cover and details; otherwise closes the details. */
+    private void onInfoAreaTapped() {
+        final MediaItem current = hasActivePlaylist() ? controller.getCurrentMediaItem() : null;
+        final TreeNode playing = current != null ? viewModel.findFile(current.mediaId) : null;
+        if (playing == null) {
+            viewModel.clearInfo();
             return;
         }
-        infoIcon.setVisibility(View.GONE);
-        infoDetails.setVisibility(View.VISIBLE);
+        viewModel.setCoverEnlarged(!viewModel.isCoverEnlarged());
+        viewModel.showInfo(playing);
+    }
+
+    private void renderInfo(final TreeNode node) {
+        final boolean detailsVisible = node != null && !viewModel.isCoverEnlarged();
+        infoIcon.setVisibility(detailsVisible ? View.GONE : View.VISIBLE);
+        infoDetails.setVisibility(detailsVisible ? View.VISIBLE : View.GONE);
+        if (node == null) {
+            renderCover();
+            return;
+        }
         infoName.setText(node.name);
 
         final List<String> lines = new ArrayList<>();
@@ -461,22 +477,31 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         updateProgress();
     }
 
-    /** Cover image of the displayed file, otherwise the app icon as a placeholder. */
+    /** Cover image of the displayed file (small and large view), otherwise the app icon as a placeholder. */
     private void renderCover() {
         final TreeNode node = viewModel.getInfoNode().getValue();
         final MainViewModel.Cover cover = viewModel.getCover().getValue();
-        if (node != null && cover != null && cover.node == node && cover.bitmap != null) {
+        final Bitmap bitmap = node != null && cover != null && cover.node == node ? cover.bitmap : null;
+        final ColorStateList placeholderTint = ColorStateList.valueOf(
+                MaterialColors.getColor(infoCover, androidx.appcompat.R.attr.colorPrimary));
+        if (bitmap != null) {
             infoCover.setImageTintList(null);
             infoCover.setPadding(0, 0, 0, 0);
             infoCover.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            infoCover.setImageBitmap(cover.bitmap);
+            infoCover.setImageBitmap(bitmap);
         } else {
             final int padding = getResources().getDimensionPixelSize(R.dimen.cover_placeholder_padding);
-            infoCover.setImageTintList(ColorStateList.valueOf(
-                    MaterialColors.getColor(infoCover, androidx.appcompat.R.attr.colorPrimary)));
+            infoCover.setImageTintList(placeholderTint);
             infoCover.setPadding(padding, padding, padding, padding);
             infoCover.setScaleType(ImageView.ScaleType.FIT_CENTER);
             infoCover.setImageResource(R.drawable.ic_genres);
+        }
+        if (bitmap != null && viewModel.isCoverEnlarged()) {
+            infoIcon.setImageTintList(null);
+            infoIcon.setImageBitmap(bitmap);
+        } else {
+            infoIcon.setImageTintList(placeholderTint);
+            infoIcon.setImageResource(R.drawable.ic_genres);
         }
     }
 
@@ -817,6 +842,11 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
     private void showPlayingInfo(final String playingId) {
         if (playingId == null) {
             viewModel.setAutoInfoMediaId(null);
+            // without a controller (e.g. during rotation) it is unknown whether a track is active
+            if (controller != null && viewModel.isCoverEnlarged()) {
+                viewModel.setCoverEnlarged(false);
+                renderInfo(viewModel.getInfoNode().getValue());
+            }
             return;
         }
         if (playingId.equals(viewModel.getAutoInfoMediaId())) {
