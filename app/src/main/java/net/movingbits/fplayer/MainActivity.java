@@ -612,6 +612,11 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         public void onProfileEdited() {
             updateMenu();
         }
+
+        @Override
+        public void showAbout() {
+            MainActivity.this.showAbout();
+        }
     }
 
     /**

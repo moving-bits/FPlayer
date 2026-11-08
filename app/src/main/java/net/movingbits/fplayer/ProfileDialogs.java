@@ -43,6 +43,9 @@ final class ProfileDialogs {
 
         /** Name or color of a profile changed. */
         void onProfileEdited();
+
+        /** Shows the about popup. */
+        void showAbout();
     }
 
     private final Context context;
@@ -84,8 +87,10 @@ final class ProfileDialogs {
         host.savePlaybackState();
         final View content = LayoutInflater.from(context).inflate(R.layout.dialog_profiles, null);
         final RecyclerView list = content.findViewById(R.id.profile_list);
+        final View title = LayoutInflater.from(context).inflate(R.layout.dialog_profiles_title, null);
+        title.findViewById(R.id.profiles_about).setOnClickListener(v -> host.showAbout());
         final AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.profiles_title)
+                .setCustomTitle(title)
                 .setView(content)
                 .setPositiveButton(R.string.ok, null)
                 .setNeutralButton(R.string.profile_new, null)
