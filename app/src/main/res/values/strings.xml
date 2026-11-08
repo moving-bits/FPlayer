@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">FPlayer</string>
+    <string name="app_name" translatable="false">fPlayer</string>
 
     <string name="action_order_sequential">Order: sequential</string>
     <string name="action_order_shuffle">Order: shuffle</string>
@@ -45,7 +45,7 @@
     <string name="nothing_selected">Nothing selected.</string>
     <string name="scan_status">Reading %s…</string>
 
-    <string name="about">About FPlayer</string>
+    <string name="about">About fPlayer</string>
     <string name="about_info">A free folder audio player</string>
     <string name="about_copyright_single" translatable="false">© %1$d moving-bits.net</string>
     <string name="about_copyright_range" translatable="false">© %1$d-%2$d moving-bits.net</string>
