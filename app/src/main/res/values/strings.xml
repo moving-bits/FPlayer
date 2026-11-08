@@ -35,9 +35,10 @@
     <string name="info_unknown" translatable="false">–</string>
 
     <string name="remove_folder_title">Remove folder?</string>
+    <string name="remove_folder_in_use_message">Warning: Folder will be removed from those profiles as well: %s.</string>
+    <string name="cancel">Cancel</string>
     <string name="remove_folder_message">„%s“ will be removed from list and access grants returned. No files will be removed.</string>
     <string name="remove">Remove</string>
-    <string name="cancel">Cancel</string>
 
     <string name="folder_already_added">Folder already added.</string>
     <string name="folder_permission_failed">Folder permission failed.</string>

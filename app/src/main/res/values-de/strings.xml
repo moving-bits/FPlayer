@@ -35,9 +35,10 @@
 
 
     <string name="remove_folder_title">Verzeichnis entfernen?</string>
+    <string name="remove_folder_in_use_message">Warnung: Verzeichnis wird auch aus diesen Profilen entfernt: %s.</string>
+    <string name="cancel">Abbrechen</string>
     <string name="remove_folder_message">„%s“ wird aus der Liste entfernt und die Zugriffsberechtigung freigegeben. Die Dateien selbst bleiben erhalten.</string>
     <string name="remove">Entfernen</string>
-    <string name="cancel">Abbrechen</string>
 
     <string name="folder_already_added">Dieses Verzeichnis ist bereits vorhanden.</string>
     <string name="folder_permission_failed">Zugriff auf das Verzeichnis konnte nicht dauerhaft gespeichert werden.</string>

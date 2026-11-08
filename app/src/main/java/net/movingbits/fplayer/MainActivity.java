@@ -379,9 +379,14 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     @Override
     public void onRemoveRoot(final TreeNode rootNode) {
+        final List<String> otherProfiles = profiles.otherProfilesWithSelection(MainViewModel.documentUriPrefix(rootNode.treeUri));
+        final StringBuilder sb = new StringBuilder(getString(R.string.remove_folder_message, rootNode.name));
+        if (!otherProfiles.isEmpty()) {
+            sb.append("\r\n\r\n").append(getString(R.string.remove_folder_in_use_message, TextUtils.join(", ", otherProfiles)));
+        }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.remove_folder_title)
-                .setMessage(getString(R.string.remove_folder_message, rootNode.name))
+                .setMessage(sb)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.remove, (d, w) -> removeRoot(rootNode))
                 .show();

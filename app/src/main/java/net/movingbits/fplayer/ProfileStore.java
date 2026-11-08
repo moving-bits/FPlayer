@@ -245,6 +245,17 @@ final class ProfileStore {
         save();
     }
 
+    /** Names of the profiles other than the active one that have files selected below the prefix. */
+    synchronized List<String> otherProfilesWithSelection(final String prefix) {
+        final List<String> names = new ArrayList<>();
+        for (Profile profile : getSorted()) {
+            if (!profile.id.equals(activeId) && profile.selection.stream().anyMatch(uri -> uri.startsWith(prefix))) {
+                names.add(profile.name);
+            }
+        }
+        return names;
+    }
+
     /** Removes everything below a removed base directory from all profiles. */
     synchronized void removeWithPrefix(final String prefix) {
         for (Profile profile : profiles) {
