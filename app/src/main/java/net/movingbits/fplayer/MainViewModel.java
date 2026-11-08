@@ -261,7 +261,7 @@ public class MainViewModel extends AndroidViewModel {
         return false;
     }
 
-    /** All selected files in tree order (= read order). */
+    /** All selected files in tree order. */
     List<TreeNode> getSelectedFiles() {
         final List<TreeNode> result = new ArrayList<>();
         for (TreeNode root : roots) {

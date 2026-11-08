@@ -27,7 +27,7 @@ final class TreeNode {
     final boolean directory;
     final TreeNode parent;
     final int depth;
-    /** Subdirectories and audio files in read order. */
+    /** Subdirectories and audio files in alphabetical order. */
     final List<TreeNode> children = new ArrayList<>();
 
     boolean expanded;

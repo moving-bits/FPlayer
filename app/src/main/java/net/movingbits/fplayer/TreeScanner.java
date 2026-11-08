@@ -7,6 +7,8 @@ import android.provider.DocumentsContract;
 import android.provider.DocumentsContract.Document;
 import android.util.Log;
 
+import java.text.Collator;
+import java.util.Comparator;
 import java.util.Locale;
 
 /** Reads a directory tree granted via SAF completely. */
@@ -35,7 +37,9 @@ final class TreeScanner {
         final Uri documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId);
         final String name = queryDisplayName(resolver, documentUri);
         final TreeNode root = new TreeNode(treeUri, documentUri, documentId, name != null ? name : documentId, true, null);
-        scanChildren(resolver, root);
+        final Collator collator = Collator.getInstance();
+        collator.setStrength(Collator.SECONDARY); // ignores case
+        scanChildren(resolver, root, Comparator.comparing(node -> node.name, collator));
         return root;
     }
 
@@ -58,7 +62,7 @@ final class TreeScanner {
         }
     }
 
-    private static void scanChildren(final ContentResolver resolver, final TreeNode dir) {
+    private static void scanChildren(final ContentResolver resolver, final TreeNode dir, final Comparator<TreeNode> order) {
         final Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(dir.treeUri, dir.documentId);
         try (Cursor c = resolver.query(childrenUri, PROJECTION, null, null, null)) {
             while (c != null && c.moveToNext()) {
@@ -72,7 +76,7 @@ final class TreeScanner {
                 final Uri uri = DocumentsContract.buildDocumentUriUsingTree(dir.treeUri, id);
                 if (Document.MIME_TYPE_DIR.equals(mimeType)) {
                     final TreeNode child = new TreeNode(dir.treeUri, uri, id, name, true, dir);
-                    scanChildren(resolver, child);
+                    scanChildren(resolver, child, order);
                     dir.children.add(child);
                     dir.totalFiles += child.totalFiles;
                 } else if (isAudioFile(name)) {
@@ -84,6 +88,7 @@ final class TreeScanner {
         } catch (RuntimeException e) {
             Log.w(TAG, "Cannot read directory: " + dir.uri, e);
         }
+        dir.children.sort(order);
     }
 
     private static String queryDisplayName(final ContentResolver resolver, final Uri documentUri) {
