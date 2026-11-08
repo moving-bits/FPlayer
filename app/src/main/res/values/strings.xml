@@ -43,6 +43,7 @@
     <string name="folder_already_added">Folder already added.</string>
     <string name="folder_permission_failed">Folder permission failed.</string>
     <string name="nothing_selected">Nothing selected.</string>
+    <string name="scan_status">Reading %s…</string>
 
     <string name="about">About FPlayer</string>
     <string name="about_info">A free folder audio player</string>

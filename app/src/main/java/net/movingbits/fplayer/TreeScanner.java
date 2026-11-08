@@ -10,6 +10,7 @@ import android.util.Log;
 import java.text.Collator;
 import java.util.Comparator;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 /** Reads a directory tree granted via SAF completely. */
 final class TreeScanner {
@@ -31,15 +32,19 @@ final class TreeScanner {
     private TreeScanner() {
     }
 
-    /** Blocking – do not call on the main thread. */
-    static TreeNode scan(final ContentResolver resolver, final Uri treeUri) {
+    /**
+     * Blocking – do not call on the main thread.
+     *
+     * @param onDirectory receives each directory on the scanning thread before it is read
+     */
+    static TreeNode scan(final ContentResolver resolver, final Uri treeUri, final Consumer<TreeNode> onDirectory) {
         final String documentId = DocumentsContract.getTreeDocumentId(treeUri);
         final Uri documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId);
         final String name = queryDisplayName(resolver, documentUri);
         final TreeNode root = new TreeNode(treeUri, documentUri, documentId, name != null ? name : documentId, true, null);
         final Collator collator = Collator.getInstance();
         collator.setStrength(Collator.SECONDARY); // ignores case
-        scanChildren(resolver, root, Comparator.comparing(node -> node.name, collator));
+        scanChildren(resolver, root, Comparator.comparing(node -> node.name, collator), onDirectory);
         return root;
     }
 
@@ -62,7 +67,9 @@ final class TreeScanner {
         }
     }
 
-    private static void scanChildren(final ContentResolver resolver, final TreeNode dir, final Comparator<TreeNode> order) {
+    private static void scanChildren(final ContentResolver resolver, final TreeNode dir, final Comparator<TreeNode> order,
+                                     final Consumer<TreeNode> onDirectory) {
+        onDirectory.accept(dir);
         final Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(dir.treeUri, dir.documentId);
         try (Cursor c = resolver.query(childrenUri, PROJECTION, null, null, null)) {
             while (c != null && c.moveToNext()) {
@@ -76,7 +83,7 @@ final class TreeScanner {
                 final Uri uri = DocumentsContract.buildDocumentUriUsingTree(dir.treeUri, id);
                 if (Document.MIME_TYPE_DIR.equals(mimeType)) {
                     final TreeNode child = new TreeNode(dir.treeUri, uri, id, name, true, dir);
-                    scanChildren(resolver, child, order);
+                    scanChildren(resolver, child, order, onDirectory);
                     dir.children.add(child);
                     dir.totalFiles += child.totalFiles;
                 } else if (isAudioFile(name)) {

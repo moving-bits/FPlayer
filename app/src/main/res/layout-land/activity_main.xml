@@ -85,6 +85,17 @@
                 android:layout_gravity="center"
                 android:indeterminate="true"
                 android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/scan_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="?attr/colorSurfaceContainer"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:visibility="gone" />
         </FrameLayout>
     </LinearLayout>
 

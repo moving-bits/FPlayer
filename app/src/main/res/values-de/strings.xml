@@ -43,6 +43,7 @@
     <string name="folder_already_added">Dieses Verzeichnis ist bereits vorhanden.</string>
     <string name="folder_permission_failed">Zugriff auf das Verzeichnis konnte nicht dauerhaft gespeichert werden.</string>
     <string name="nothing_selected">Keine Titel ausgewählt.</string>
+    <string name="scan_status">Lese %s…</string>
 
     <string name="about">Über FPlayer</string>
     <string name="about_info">Ein freier Verzeichnis-Audioplayer</string>

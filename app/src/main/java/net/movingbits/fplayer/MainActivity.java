@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
     private RecyclerView treeList;
     private View emptyView;
     private CircularProgressIndicator scanProgress;
+    private TextView scanStatus;
     private TextView nowPlaying;
     private MaterialButton buttonPrevious;
     private MaterialButton buttonRewind;
@@ -134,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         treeList = findViewById(R.id.tree_list);
         emptyView = findViewById(R.id.empty_view);
         scanProgress = findViewById(R.id.scan_progress);
+        scanStatus = findViewById(R.id.scan_status);
         nowPlaying = findViewById(R.id.now_playing);
         buttonPrevious = findViewById(R.id.button_previous);
         buttonRewind = findViewById(R.id.button_rewind);
@@ -170,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
         viewModel.getTreeVersion().observe(this, v -> updateTree());
         viewModel.isScanning().observe(this, v -> updateTree());
+        viewModel.getScanDirectory().observe(this, this::renderScanStatus);
         viewModel.getInfoNode().observe(this, this::renderInfo);
         viewModel.getCover().observe(this, c -> renderCover());
 
@@ -340,6 +343,14 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
             revealPlayingFile();
         }
         updatePlayerUi();
+    }
+
+    /** Shows below the tree which directory is being read. */
+    private void renderScanStatus(final String directory) {
+        scanStatus.setVisibility(directory != null ? View.VISIBLE : View.GONE);
+        if (directory != null) {
+            scanStatus.setText(getString(R.string.scan_status, directory));
+        }
     }
 
     /** After a finished scan, opens the tree at the current track of the playlist. */

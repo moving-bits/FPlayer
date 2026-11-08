@@ -62,6 +62,11 @@ final class TreeNode {
         return parent == null;
     }
 
+    /** The names from the base directory down to this entry, separated by slashes. */
+    String path() {
+        return parent == null ? name : parent.path() + "/" + name;
+    }
+
     int getCheckState() {
         if (!directory) {
             return selected ? CHECK_ALL : CHECK_NONE;

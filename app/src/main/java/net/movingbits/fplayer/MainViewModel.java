@@ -45,6 +45,8 @@ public class MainViewModel extends AndroidViewModel {
     /** Incremented on every change of structure, selection or expansion state. */
     private final MutableLiveData<Integer> treeVersion = new MutableLiveData<>(0);
     private final MutableLiveData<Boolean> scanning = new MutableLiveData<>(false);
+    /** Path of the directory being read right now; {@code null} if no scan is running. */
+    private final MutableLiveData<String> scanDirectory = new MutableLiveData<>(null);
     private final MutableLiveData<TreeNode> infoNode = new MutableLiveData<>(null);
     private final MutableLiveData<Cover> cover = new MutableLiveData<>(null);
 
@@ -83,6 +85,10 @@ public class MainViewModel extends AndroidViewModel {
 
     LiveData<Boolean> isScanning() {
         return scanning;
+    }
+
+    LiveData<String> getScanDirectory() {
+        return scanDirectory;
     }
 
     LiveData<TreeNode> getInfoNode() {
@@ -438,13 +444,17 @@ public class MainViewModel extends AndroidViewModel {
         scanning.setValue(true);
         final ContentResolver resolver = getApplication().getContentResolver();
         scanExecutor.execute(() -> {
-            final TreeNode root = TreeScanner.scan(resolver, treeUri);
+            // postValue() keeps only the latest value, so that fast scans don't flood the main thread
+            final TreeNode root = TreeScanner.scan(resolver, treeUri, dir -> scanDirectory.postValue(dir.path()));
             restoreSelection(root, profiles.getActive().copyOfSelection());
             mainHandler.post(() -> {
                 pendingScans--;
                 // may already have been removed again while scanning
                 if (Settings.getRoots(getApplication()).contains(treeUri)) {
                     roots.add(root);
+                }
+                if (pendingScans == 0) {
+                    scanDirectory.setValue(null);
                 }
                 revealPlayingPending = pendingScans == 0;
                 scanning.setValue(pendingScans > 0);
