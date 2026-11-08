@@ -1,5 +1,6 @@
 package net.movingbits.fplayer;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -275,7 +276,8 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         title.setTooltipText(getText(R.string.about));
     }
 
-    /** Popup with app name, copyright and version. */
+    /** Popup with app name, version, commit ID and copyright. */
+    @SuppressLint("SetTextI18n")
     private void showAbout() {
         final View content = getLayoutInflater().inflate(R.layout.dialog_about, null);
         final int firstYear = 2026;
@@ -285,6 +287,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
                 ? getString(R.string.about_copyright_range, firstYear, year)
                 : getString(R.string.about_copyright_single, firstYear));
         ((TextView) content.findViewById(R.id.about_version)).setText(getString(R.string.about_version, versionName()));
+        ((TextView) content.findViewById(R.id.about_commit)).setText("[ " + getString(R.string.about_commit, BuildConfig.COMMIT_ID) + " ]");
         new MaterialAlertDialogBuilder(this)
                 .setView(content)
                 .setPositiveButton(R.string.ok, null)

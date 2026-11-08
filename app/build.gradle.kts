@@ -56,6 +56,11 @@ android {
         targetSdk = 36
         versionCode = dateVersionCode
         versionName = dateVersionName
+        buildConfigField("String", "COMMIT_ID", "\"$gitShortHash\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

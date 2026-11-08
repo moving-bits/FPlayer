@@ -49,6 +49,7 @@
     <string name="about_copyright_single" translatable="false">© %1$d moving-bits.net</string>
     <string name="about_copyright_range" translatable="false">© %1$d-%2$d moving-bits.net</string>
     <string name="about_version">Version %s</string>
+    <string name="about_commit">Commit ID: %s</string>
 
     <string name="profile_button">Profile: %s</string>
     <string name="profiles_title">Profiles</string>

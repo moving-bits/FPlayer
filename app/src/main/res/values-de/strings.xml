@@ -49,6 +49,7 @@
 
 
     <string name="about_version">Version %s</string>
+    <string name="about_commit">Commit-ID: %s</string>
 
     <string name="profile_button">Profil: %s</string>
     <string name="profiles_title">Profile</string>
