@@ -20,6 +20,7 @@ private.properties
 # build system temporary files
 .gradle/
 /app/build/
+/app/release/
 build
 build-cache/
 # build system user specific files
