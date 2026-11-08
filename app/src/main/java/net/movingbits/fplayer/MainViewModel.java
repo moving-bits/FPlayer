@@ -39,6 +39,8 @@ public class MainViewModel extends AndroidViewModel {
     private String autoInfoMediaId;
     /** Whether the active profile's playlist has been set up after the app start. */
     private boolean playbackRestored;
+    /** Whether the tree still has to be opened at the playing track after a finished scan. */
+    private boolean revealPlayingPending;
 
     /** Incremented on every change of structure, selection or expansion state. */
     private final MutableLiveData<Integer> treeVersion = new MutableLiveData<>(0);
@@ -304,6 +306,20 @@ public class MainViewModel extends AndroidViewModel {
         playbackRestored = true;
     }
 
+    /** Returns whether the tree has to be opened at the playing track, and resets this request. */
+    boolean consumeRevealPlaying() {
+        final boolean pending = revealPlayingPending;
+        revealPlayingPending = false;
+        return pending;
+    }
+
+    /** Expands all directories above the entry. The caller has to update the displayed list. */
+    void expandParents(final TreeNode node) {
+        for (TreeNode p = node.parent; p != null; p = p.parent) {
+            p.expanded = true;
+        }
+    }
+
     /** Finds a file in the tree by its document URI; {@code null} if not (or no longer) present. */
     TreeNode findFile(final String uri) {
         for (TreeNode root : roots) {
@@ -430,6 +446,7 @@ public class MainViewModel extends AndroidViewModel {
                 if (Settings.getRoots(getApplication()).contains(treeUri)) {
                     roots.add(root);
                 }
+                revealPlayingPending = pendingScans == 0;
                 scanning.setValue(pendingScans > 0);
                 bumpTreeVersion();
             });

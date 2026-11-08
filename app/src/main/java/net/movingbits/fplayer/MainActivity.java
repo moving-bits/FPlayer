@@ -193,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
             if (!Boolean.TRUE.equals(viewModel.isScanning().getValue())) {
                 restorePlaybackOnce();
                 syncPlaylist();
+                revealPlayingFile();
             }
             updatePlayerUi();
         }, MoreExecutors.directExecutor());
@@ -333,8 +334,26 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         if (!scanning) {
             restorePlaybackOnce();
             syncPlaylist();
+            revealPlayingFile();
         }
         updatePlayerUi();
+    }
+
+    /** After a finished scan, opens the tree at the current track of the playlist. */
+    private void revealPlayingFile() {
+        if (controller == null || !viewModel.consumeRevealPlaying()) {
+            return;
+        }
+        final MediaItem current = hasActivePlaylist() ? controller.getCurrentMediaItem() : null;
+        final TreeNode node = current != null ? viewModel.findFile(current.mediaId) : null;
+        if (node == null) {
+            return;
+        }
+        viewModel.expandParents(node);
+        final List<TreeNode> visible = viewModel.getVisibleNodes();
+        adapter.setItems(visible);
+        ((LinearLayoutManager) treeList.getLayoutManager())
+                .scrollToPositionWithOffset(visible.indexOf(node), treeList.getHeight() / 3);
     }
 
     @Override
