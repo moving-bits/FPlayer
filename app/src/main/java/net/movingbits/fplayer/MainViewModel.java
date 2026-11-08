@@ -2,6 +2,7 @@ package net.movingbits.fplayer;
 
 import android.app.Application;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.UriPermission;
 import android.graphics.Bitmap;
@@ -41,6 +42,8 @@ public class MainViewModel extends AndroidViewModel {
     private boolean playbackRestored;
     /** Whether the tree still has to be opened at the playing track after a finished scan. */
     private boolean revealPlayingPending;
+    /** The profile whose selection the tree shows. Android Auto can activate another one. */
+    private String appliedProfileId;
 
     /** Incremented on every change of structure, selection or expansion state. */
     private final MutableLiveData<Integer> treeVersion = new MutableLiveData<>(0);
@@ -53,6 +56,7 @@ public class MainViewModel extends AndroidViewModel {
     public MainViewModel(@NonNull final Application application) {
         super(application);
         profiles = ProfileStore.get(application);
+        appliedProfileId = profiles.getActive().id;
 
         // drop base directories without a (still valid) permission
         final Set<Uri> granted = new HashSet<>();
@@ -293,9 +297,31 @@ public class MainViewModel extends AndroidViewModel {
         }
     }
 
+    /**
+     * Reads the files of a stored selection in tree order, independently of the tree of the UI.
+     * Blocking – do not call on the main thread.
+     */
+    static List<TreeNode> loadSelectedFiles(final Context context, final Set<String> selection) {
+        final ContentResolver resolver = context.getContentResolver();
+        final List<TreeNode> files = new ArrayList<>();
+        for (Uri treeUri : Settings.getRoots(context)) {
+            final TreeNode root = TreeScanner.scan(resolver, treeUri, dir -> { });
+            restoreSelection(root, selection);
+            collectSelected(root, files);
+        }
+        return files;
+    }
+
+    /** Whether the tree shows the selection of the active profile. */
+    boolean isActiveProfileApplied() {
+        return profiles.getActive().id.equals(appliedProfileId);
+    }
+
     /** Replaces the selection in the tree with the one stored in the (newly) active profile. */
     void applyActiveProfileSelection() {
-        final Set<String> stored = profiles.getActive().copyOfSelection();
+        final Profile active = profiles.getActive();
+        appliedProfileId = active.id;
+        final Set<String> stored = active.copyOfSelection();
         for (TreeNode root : roots) {
             setSelectedRecursive(root, false);
             restoreSelection(root, stored);

@@ -45,6 +45,10 @@
     <string name="nothing_selected">Keine Titel ausgewählt.</string>
     <string name="scan_status">Lese %s…</string>
 
+    <string name="auto_profile_active">Aktiv</string>
+    <string name="auto_profile_empty">Dieses Profil enthält noch keine Titel. Wähle sie in der App auf dem Telefon aus.</string>
+    <string name="auto_profile_not_found">Dieses Profil gibt es nicht.</string>
+
     <string name="about">Über fPlayer</string>
     <string name="about_info">Ein freier Verzeichnis-Audioplayer</string>
 

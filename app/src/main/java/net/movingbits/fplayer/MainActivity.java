@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
     private final Player.Listener playerListener = new Player.Listener() {
         @Override
         public void onEvents(@androidx.annotation.NonNull final Player player, @androidx.annotation.NonNull final Player.Events events) {
+            followProfileChange();
             updatePlayerUi();
         }
     };
@@ -182,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
     @Override
     protected void onStart() {
         super.onStart();
+        followProfileChange();
         final SessionToken token = new SessionToken(this, new ComponentName(this, PlaybackService.class));
         controllerFuture = new MediaController.Builder(this, token).buildAsync();
         controllerFuture.addListener(() -> {
@@ -550,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         final Profile profile = profiles.getActive();
         final List<MediaItem> items = new ArrayList<>(files.size());
         for (TreeNode file : files) {
-            items.add(toMediaItem(file, profile.id, restoreShuffleOrder));
+            items.add(PlaybackService.toMediaItem(file, profile.id, restoreShuffleOrder));
         }
         controller.setShuffleModeEnabled(profile.shuffle);
         controller.setRepeatMode(profile.repeat ? Player.REPEAT_MODE_ALL : Player.REPEAT_MODE_OFF);
@@ -608,6 +610,13 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         updatePlayerUi();
     }
 
+    /** Shows the selection of a profile that was activated from Android Auto; the service set up its playlist. */
+    private void followProfileChange() {
+        if (!viewModel.isActiveProfileApplied()) {
+            viewModel.applyActiveProfileSelection();
+        }
+    }
+
     private final class ProfileHost implements ProfileDialogs.Host {
         @Override
         public void savePlaybackState() {
@@ -637,7 +646,8 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
      * separately).
      */
     private void syncPlaylist() {
-        if (!hasActivePlaylist()) {
+        // while Android Auto switches the profile, the tree and the playlist belong to different profiles
+        if (!hasActivePlaylist() || !profiles.getActive().id.equals(playlistProfileId())) {
             return;
         }
         final List<TreeNode> selected = viewModel.getSelectedFiles();
@@ -688,31 +698,13 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         final List<MediaItem> items = new ArrayList<>(pending.size());
         final List<String> ids = new ArrayList<>(pending.size());
         for (TreeNode file : pending) {
-            items.add(toMediaItem(file, playlistProfileId(), false));
+            items.add(PlaybackService.toMediaItem(file, playlistProfileId(), false));
             ids.add(file.uri.toString());
         }
         controller.addMediaItems(position, items);
         playlist.addAll(position, ids);
         pending.clear();
         return position + items.size();
-    }
-
-    private static MediaItem toMediaItem(final TreeNode file, final String profileId, final boolean restoreShuffleOrder) {
-        final Bundle extras = new Bundle();
-        extras.putString(PlaybackService.EXTRA_PROFILE_ID, profileId);
-        extras.putBoolean(PlaybackService.EXTRA_RESTORE_ORDER, restoreShuffleOrder);
-        final MediaMetadata.Builder metadata = new MediaMetadata.Builder().setDisplayTitle(file.name);
-        if (file.metadataLoaded) {
-            metadata.setTitle(file.title != null ? file.title : file.name).setArtist(file.artist).setAlbumTitle(file.album);
-        }
-        return new MediaItem.Builder()
-                .setMediaId(file.uri.toString())
-                .setRequestMetadata(new MediaItem.RequestMetadata.Builder()
-                        .setMediaUri(file.uri)
-                        .setExtras(extras)
-                        .build())
-                .setMediaMetadata(metadata.build())
-                .build();
     }
 
     /** The profile the running playlist belongs to (normally the active one). */
