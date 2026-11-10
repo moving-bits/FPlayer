@@ -37,11 +37,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-import java.util.Set;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -681,70 +679,15 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
 
     /**
      * Synchronizes a running playlist with the selection in the tree: deselected files are removed,
-     * newly selected ones are inserted at their position in tree order. The playlist is always a
-     * subsequence of the selected files in tree order (the player manages the shuffle order
-     * separately).
+     * newly selected ones are inserted at their position in tree order.
      */
     private void syncPlaylist() {
         // while Android Auto switches the profile, the tree and the playlist belong to different profiles
-        if (!hasActivePlaylist() || !profiles.getActive().id.equals(playlistProfileId())) {
+        final String profileId = playlistProfileId();
+        if (!hasActivePlaylist() || !profiles.getActive().id.equals(profileId)) {
             return;
         }
-        final List<TreeNode> selected = viewModel.getSelectedFiles();
-        final Set<String> selectedIds = new HashSet<>();
-        for (TreeNode file : selected) {
-            selectedIds.add(file.uri.toString());
-        }
-        final List<String> playlist = new ArrayList<>();
-        for (int i = 0; i < controller.getMediaItemCount(); i++) {
-            playlist.add(controller.getMediaItemAt(i).mediaId);
-        }
-
-        // remove deselected files, contiguous ranges in one go (from back to front)
-        int i = playlist.size();
-        while (i > 0) {
-            final int runEnd = i;
-            while (i > 0 && !selectedIds.contains(playlist.get(i - 1))) {
-                i--;
-            }
-            if (i < runEnd) {
-                controller.removeMediaItems(i, runEnd);
-                playlist.subList(i, runEnd).clear();
-            } else {
-                i--;
-            }
-        }
-
-        // insert newly selected files
-        final Set<String> present = new HashSet<>(playlist);
-        final List<TreeNode> pending = new ArrayList<>();
-        int position = 0;
-        for (TreeNode file : selected) {
-            final String id = file.uri.toString();
-            if (!present.contains(id)) {
-                pending.add(file);
-                continue;
-            }
-            position = insertPending(playlist, position, pending);
-            position = playlist.indexOf(id) + 1;
-        }
-        insertPending(playlist, position, pending);
-    }
-
-    private int insertPending(final List<String> playlist, final int position, final List<TreeNode> pending) {
-        if (pending.isEmpty()) {
-            return position;
-        }
-        final List<MediaItem> items = new ArrayList<>(pending.size());
-        final List<String> ids = new ArrayList<>(pending.size());
-        for (TreeNode file : pending) {
-            items.add(PlaybackService.toMediaItem(file, playlistProfileId(), false));
-            ids.add(file.uri.toString());
-        }
-        controller.addMediaItems(position, items);
-        playlist.addAll(position, ids);
-        pending.clear();
-        return position + items.size();
+        PlaylistSync.apply(controller, viewModel.getSelectedFiles(), profileId);
     }
 
     /** The profile the running playlist belongs to (normally the active one). */

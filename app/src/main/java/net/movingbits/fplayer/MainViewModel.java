@@ -217,6 +217,29 @@ public class MainViewModel extends AndroidViewModel {
             }
         }
         profiles.setSelection(result);
+        cachePlaylist();
+    }
+
+    /**
+     * Remembers the selected files of the active profile, so that Android Auto can start the
+     * profile without a full scan. Only possible once all base directories are loaded.
+     */
+    private void cachePlaylist() {
+        final List<Uri> configured = Settings.getRoots(getApplication());
+        if (pendingScans > 0 || !isActiveProfileApplied() || configured.size() != roots.size()) {
+            return;
+        }
+        // in the order of the base directories, like loadSelectedFiles()
+        final List<TreeNode> files = new ArrayList<>();
+        for (Uri treeUri : configured) {
+            for (TreeNode root : roots) {
+                if (root.treeUri.equals(treeUri)) {
+                    collectSelected(root, files);
+                }
+            }
+        }
+        final Profile active = profiles.getActive();
+        profiles.setPlaylist(active.id, active.copyOfSelection(), files);
     }
 
     private static void encodeSelection(final TreeNode node, final Set<String> result) {
@@ -327,6 +350,7 @@ public class MainViewModel extends AndroidViewModel {
             setSelectedRecursive(root, false);
             restoreSelection(root, stored);
         }
+        cachePlaylist();
         bumpTreeVersion();
     }
 
@@ -491,6 +515,7 @@ public class MainViewModel extends AndroidViewModel {
                 }
                 if (pendingScans == 0) {
                     scanDirectory.setValue(null);
+                    cachePlaylist();
                 }
                 revealPlayingPending = pendingScans == 0;
                 scanning.setValue(pendingScans > 0);

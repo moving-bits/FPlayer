@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.DocumentsContract;
 import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
@@ -211,7 +212,10 @@ public class PlaybackService extends MediaLibraryService {
         return extras != null ? extras.getString(EXTRA_PROFILE_ID) : null;
     }
 
-    /** The media item of a file in the playlist of the given profile. */
+    /**
+     * The media item of a file in the playlist of the given profile. It carries the playback URI
+     * directly (for the service's own player) and in the RequestMetadata (for controllers).
+     */
     static MediaItem toMediaItem(final TreeNode file, final String profileId, final boolean restoreShuffleOrder) {
         final Bundle extras = new Bundle();
         extras.putString(EXTRA_PROFILE_ID, profileId);
@@ -222,6 +226,7 @@ public class PlaybackService extends MediaLibraryService {
         }
         return new MediaItem.Builder()
                 .setMediaId(file.uri.toString())
+                .setUri(file.uri)
                 .setRequestMetadata(new MediaItem.RequestMetadata.Builder()
                         .setMediaUri(file.uri)
                         .setExtras(extras)
@@ -275,7 +280,7 @@ public class PlaybackService extends MediaLibraryService {
         }
         final List<MediaItem> items = new ArrayList<>(files.size());
         for (TreeNode file : files) {
-            items.add(withPlaybackUri(toMediaItem(file, profile.id, restoreOrder)));
+            items.add(toMediaItem(file, profile.id, restoreOrder));
         }
         return new MediaSession.MediaItemsWithStartPosition(items, startIndex, startPositionMs);
     }
@@ -522,11 +527,20 @@ public class PlaybackService extends MediaLibraryService {
                 shufflingPlayer.play();
                 return Futures.immediateCancelledFuture();
             }
+            // Scanning the files takes seconds with a large library. The cached playlist starts
+            // playback at once; the scan then only brings it up to date.
             final SettableFuture<MediaSession.MediaItemsWithStartPosition> result = SettableFuture.create();
             libraryExecutor.execute(() -> {
+                final List<TreeNode> cached = cachedFiles(profile.id, selection);
+                if (cached != null) {
+                    handler.post(() -> result.set(switchToProfile(profile, cached)));
+                }
                 final List<TreeNode> files = MainViewModel.loadSelectedFiles(PlaybackService.this, selection);
+                profiles.setPlaylist(profile.id, selection, files);
                 handler.post(() -> {
-                    if (files.isEmpty()) {
+                    if (cached != null) {
+                        updatePlaylist(profile.id, files);
+                    } else if (files.isEmpty()) {
                         reportEmptyProfile();
                         result.cancel(false);
                     } else {
@@ -535,6 +549,49 @@ public class PlaybackService extends MediaLibraryService {
                 });
             });
             return result;
+        }
+
+        /** The cached files of a profile's selection, or {@code null} if there is no valid cache. Blocking. */
+        @Nullable
+        private List<TreeNode> cachedFiles(final String profileId, final Set<String> selection) {
+            final ProfileStore.CachedPlaylist cached = profiles.getPlaylist(profileId, selection);
+            if (cached == null || cached.uris.isEmpty()) {
+                return null;
+            }
+            final List<Uri> roots = Settings.getRoots(PlaybackService.this);
+            final List<TreeNode> files = new ArrayList<>(cached.uris.size());
+            for (int i = 0; i < cached.uris.size(); i++) {
+                final String uri = cached.uris.get(i);
+                final Uri treeUri = rootOf(roots, uri);
+                if (treeUri == null) {
+                    return null; // base directory removed
+                }
+                final Uri documentUri = Uri.parse(uri);
+                files.add(new TreeNode(treeUri, documentUri, DocumentsContract.getDocumentId(documentUri),
+                        cached.names.get(i), false, null));
+            }
+            return files;
+        }
+
+        @Nullable
+        private Uri rootOf(final List<Uri> roots, final String documentUri) {
+            for (Uri treeUri : roots) {
+                if (documentUri.startsWith(MainViewModel.documentUriPrefix(treeUri))) {
+                    return treeUri;
+                }
+            }
+            return null;
+        }
+
+        /** Applies the rescanned files to a playlist that was started from the cache, if it is still running. */
+        private void updatePlaylist(final String profileId, final List<TreeNode> files) {
+            if (!profileId.equals(profileOf(player.getCurrentMediaItem())) || player.getPlaybackState() == Player.STATE_ENDED) {
+                return; // replaced or finished meanwhile
+            }
+            PlaylistSync.apply(shufflingPlayer, files, profileId);
+            if (files.isEmpty()) {
+                reportEmptyProfile();
+            }
         }
 
         private void reportEmptyProfile() {

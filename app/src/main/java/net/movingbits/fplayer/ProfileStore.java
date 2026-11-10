@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +35,8 @@ import org.json.JSONObject;
  *
  * <p>Shared by the UI and the {@link PlaybackService} (same process), so all methods are
  * synchronized. The profiles are stored in one JSON file; the shuffle play order of each profile,
- * which can be large, is kept in a separate file per profile and written in the background.
+ * which can be large, is kept in a separate file per profile and written in the background, as is
+ * the cached playlist (the files the selection resolved to at the last scan).
  */
 final class ProfileStore {
 
@@ -61,22 +63,27 @@ final class ProfileStore {
     private static final String TAG = "ProfileStore";
     private static final String FILE_NAME = "profiles.json";
     private static final String ORDER_DIR = "profile_orders";
+    private static final String PLAYLIST_DIR = "profile_playlists";
 
     private static ProfileStore instance;
 
     private final Context context;
     private final AtomicFile file;
     private final File orderDir;
+    private final File playlistDir;
     private final ExecutorService orderWriter = Executors.newSingleThreadExecutor();
     private final List<Profile> profiles = new ArrayList<>();
     /** Cached shuffle orders by profile id; a missing key means "not loaded yet". */
     private final Map<String, List<String>> orders = new HashMap<>();
+    /** Cached playlists by profile id; a missing key means "not loaded yet". */
+    private final Map<String, CachedPlaylist> playlists = new HashMap<>();
     private String activeId = DEFAULT_ID;
 
     private ProfileStore(final Context context) {
         this.context = context.getApplicationContext();
         file = new AtomicFile(new File(this.context.getFilesDir(), FILE_NAME));
         orderDir = new File(this.context.getFilesDir(), ORDER_DIR);
+        playlistDir = new File(this.context.getFilesDir(), PLAYLIST_DIR);
         load();
     }
 
@@ -160,6 +167,10 @@ final class ProfileStore {
         if (order != null) {
             setShuffleOrder(profile.id, order);
         }
+        final CachedPlaylist playlist = getPlaylist(source.id, profile.selection);
+        if (playlist != null) {
+            storePlaylist(profile.id, playlist);
+        }
         activate(profile.id);
         return profile;
     }
@@ -194,6 +205,7 @@ final class ProfileStore {
         }
         profiles.remove(profile);
         setShuffleOrder(id, null);
+        storePlaylist(id, null);
         final boolean wasActive = id.equals(activeId);
         if (wasActive) {
             activate(DEFAULT_ID);
@@ -344,6 +356,10 @@ final class ProfileStore {
             }
             return;
         }
+        writeText(target, String.join("\n", order));
+    }
+
+    private static void writeText(final File target, final String text) {
         final File dir = target.getParentFile();
         if (dir != null && !dir.isDirectory() && !dir.mkdirs()) {
             Log.w(TAG, "Cannot create " + dir);
@@ -353,7 +369,7 @@ final class ProfileStore {
         FileOutputStream out = null;
         try {
             out = atomic.startWrite();
-            out.write(String.join("\n", order).getBytes(StandardCharsets.UTF_8));
+            out.write(text.getBytes(StandardCharsets.UTF_8));
             atomic.finishWrite(out);
         } catch (IOException e) {
             Log.w(TAG, "Cannot write " + target, e);
@@ -361,6 +377,124 @@ final class ProfileStore {
                 atomic.failWrite(out);
             }
         }
+    }
+
+    // ----- Cached playlist -----
+
+    /**
+     * The files a selection resolved to at the last scan, in tree order. Lets Android Auto start a
+     * profile without waiting for a full scan.
+     */
+    static final class CachedPlaylist {
+        final Set<String> selection;
+        final List<String> uris;
+        final List<String> names;
+
+        CachedPlaylist(final Set<String> selection, final List<String> uris, final List<String> names) {
+            this.selection = selection;
+            this.uris = uris;
+            this.names = names;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (!(o instanceof CachedPlaylist)) {
+                return false;
+            }
+            final CachedPlaylist other = (CachedPlaylist) o;
+            return selection.equals(other.selection) && uris.equals(other.uris) && names.equals(other.names);
+        }
+
+        @Override
+        public int hashCode() {
+            return uris.hashCode();
+        }
+    }
+
+    /**
+     * The cached files of a profile, or {@code null} if there are none or they were found for a
+     * different selection. May read the file – do not call on the main thread.
+     */
+    synchronized CachedPlaylist getPlaylist(final String id, final Set<String> selection) {
+        if (!playlists.containsKey(id)) {
+            playlists.put(id, readPlaylist(id));
+        }
+        final CachedPlaylist playlist = playlists.get(id);
+        return playlist != null && playlist.selection.equals(selection) ? playlist : null;
+    }
+
+    /** Remembers the files (tree order) a profile's selection resolves to; written in the background. */
+    synchronized void setPlaylist(final String id, final Set<String> selection, final List<TreeNode> files) {
+        final List<String> uris = new ArrayList<>(files.size());
+        final List<String> names = new ArrayList<>(files.size());
+        for (TreeNode file : files) {
+            uris.add(file.uri.toString());
+            names.add(file.name);
+        }
+        storePlaylist(id, new CachedPlaylist(new HashSet<>(selection), uris, names));
+    }
+
+    private void storePlaylist(final String id, final CachedPlaylist playlist) {
+        if (playlist != null && playlist.equals(playlists.get(id))) {
+            return;
+        }
+        playlists.put(id, playlist);
+        final File target = playlistFile(id);
+        orderWriter.execute(() -> writePlaylist(target, playlist));
+    }
+
+    private File playlistFile(final String id) {
+        return new File(playlistDir, id + ".json");
+    }
+
+    private CachedPlaylist readPlaylist(final String id) {
+        final File source = playlistFile(id);
+        if (!source.exists()) {
+            return null;
+        }
+        try (FileInputStream in = new FileInputStream(source)) {
+            final JSONObject json = new JSONObject(new String(readAll(in), StandardCharsets.UTF_8));
+            final JSONArray selection = json.getJSONArray("selection");
+            final Set<String> selectionSet = new HashSet<>();
+            for (int i = 0; i < selection.length(); i++) {
+                selectionSet.add(selection.getString(i));
+            }
+            // flat list of pairs: URI, name, URI, name, ...
+            final JSONArray files = json.getJSONArray("files");
+            final List<String> uris = new ArrayList<>(files.length() / 2);
+            final List<String> names = new ArrayList<>(files.length() / 2);
+            for (int i = 0; i + 1 < files.length(); i += 2) {
+                uris.add(files.getString(i));
+                names.add(files.getString(i + 1));
+            }
+            return new CachedPlaylist(selectionSet, uris, names);
+        } catch (IOException | JSONException e) {
+            Log.w(TAG, "Cannot read cached playlist of " + id, e);
+            return null;
+        }
+    }
+
+    private static void writePlaylist(final File target, final CachedPlaylist playlist) {
+        if (playlist == null) {
+            if (target.exists() && !target.delete()) {
+                Log.w(TAG, "Cannot delete " + target);
+            }
+            return;
+        }
+        final JSONArray files = new JSONArray();
+        for (int i = 0; i < playlist.uris.size(); i++) {
+            files.put(playlist.uris.get(i));
+            files.put(playlist.names.get(i));
+        }
+        final JSONObject json = new JSONObject();
+        try {
+            json.put("selection", new JSONArray(playlist.selection));
+            json.put("files", files);
+        } catch (JSONException e) {
+            Log.w(TAG, "Cannot encode " + target, e);
+            return;
+        }
+        writeText(target, json.toString());
     }
 
     // ----- Persistence -----
