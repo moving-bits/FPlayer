@@ -299,7 +299,22 @@ public class MainActivity extends AppCompatActivity implements TreeAdapter.Liste
         new MaterialAlertDialogBuilder(this)
                 .setView(content)
                 .setPositiveButton(R.string.ok, null)
+                .setNeutralButton(R.string.diagnostics, (dialog, which) -> showDiagnostics())
                 .show();
+    }
+
+    /** Temporary: shows the requests of external controllers, selectable for copying. */
+    private void showDiagnostics() {
+        final String lines = RemoteDiagnostics.dump();
+        final TextView message = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.diagnostics)
+                .setMessage(lines.isEmpty() ? getString(R.string.diagnostics_empty) : lines)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+                .findViewById(android.R.id.message);
+        if (message != null) {
+            message.setTextIsSelectable(true);
+        }
     }
 
     private String versionName() {

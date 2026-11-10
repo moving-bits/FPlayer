@@ -60,6 +60,8 @@
     <string name="profiles_title">Profile</string>
     <string name="profile_new">Neu</string>
     <string name="ok">OK</string>
+    <string name="diagnostics">Diagnose</string>
+    <string name="diagnostics_empty">Noch keine Anfragen aufgezeichnet.</string>
     <string name="profile_new_title">Neues Profil</string>
     <string name="profile_edit_title">Profil bearbeiten</string>
     <string name="profile_name">Name</string>

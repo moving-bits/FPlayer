@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -346,6 +347,32 @@ public class PlaybackService extends MediaLibraryService {
 
     @OptIn(markerClass = UnstableApi.class)
     private final class SessionCallback implements MediaLibrarySession.Callback {
+
+        @NonNull
+        @Override
+        public MediaSession.ConnectionResult onConnect(@NonNull final MediaSession mediaSession,
+                                                       @NonNull final MediaSession.ControllerInfo controller) {
+            RemoteDiagnostics.add("connect " + controller.getPackageName() + " v" + controller.getControllerVersion()
+                    + (controller.isTrusted() ? " trusted" : ""));
+            return MediaLibrarySession.Callback.super.onConnect(mediaSession, controller);
+        }
+
+        @Override
+        public int onPlayerCommandRequest(@NonNull final MediaSession mediaSession,
+                                          @NonNull final MediaSession.ControllerInfo controller, final int playerCommand) {
+            RemoteDiagnostics.add("command " + playerCommand + " " + controller.getPackageName());
+            return MediaLibrarySession.Callback.super.onPlayerCommandRequest(mediaSession, controller, playerCommand);
+        }
+
+        @Override
+        public boolean onMediaButtonEvent(@NonNull final MediaSession mediaSession,
+                                          @NonNull final MediaSession.ControllerInfo controller,
+                                          @NonNull final Intent intent) {
+            final KeyEvent key = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            RemoteDiagnostics.add("button " + (key == null ? "?" : KeyEvent.keyCodeToString(key.getKeyCode())
+                    + (key.getAction() == KeyEvent.ACTION_DOWN ? " down" : " up")) + " " + controller.getPackageName());
+            return MediaLibrarySession.Callback.super.onMediaButtonEvent(mediaSession, controller, intent);
+        }
 
         @NonNull
         @Override
